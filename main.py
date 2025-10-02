@@ -1,16 +1,15 @@
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+import asyncio
+from bot.bot import bot
+from logging_config import setup_logging
 
 
-# Press the green button in the gutter to run the script.
+# Main entry point for the bot
+async def main():
+    logger = setup_logging()
+    logger.info("Starting the bot...")
+    await bot.infinity_polling()
+
+
+# Run the main function if this script is executed
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    asyncio.run(main())

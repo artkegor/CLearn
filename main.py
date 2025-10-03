@@ -2,6 +2,7 @@ import asyncio
 from telebot.types import BotCommand
 from bot.bot import bot, register_handlers
 from logging_config import setup_logging
+from telebot.async_telebot import asyncio_filters
 
 
 # Main entry point for the bot
@@ -11,6 +12,9 @@ async def main():
     bot_info = await bot.get_me()
 
     # Import and register handlers
+    bot.add_custom_filter(
+        custom_filter=asyncio_filters.StateFilter(bot)
+    )
     await register_handlers()
 
     # Set bot commands

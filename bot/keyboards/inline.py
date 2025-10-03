@@ -2,7 +2,8 @@ from config import Config
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 # Constants
-themes = Config.C_TOPICS
+THEMES = Config.C_TOPICS
+DIFFICULTIES = Config.TASK_DIFFICULTIES
 
 
 # Main menu inline keyboard
@@ -46,7 +47,7 @@ def choose_task_theme_keyboard():
         InlineKeyboardButton(
             text=text,
             callback_data=f"task_theme_{task_id}"
-        ) for task_id, text in themes.items()
+        ) for task_id, text in THEMES.items()
     ]
     buttons.append(
         InlineKeyboardButton(
@@ -54,5 +55,18 @@ def choose_task_theme_keyboard():
             callback_data="back_to_main_menu"
         )
     )
+    keyboard.add(*buttons)
+    return keyboard
+
+
+# Choose task difficulty keyboard
+def choose_task_difficulty_keyboard(theme_id: str):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    buttons = [
+        InlineKeyboardButton(
+            text=text,
+            callback_data=f"task_difficulty_{theme_id}_{difficulty_id}"
+        ) for difficulty_id, text in DIFFICULTIES.items()
+    ]
     keyboard.add(*buttons)
     return keyboard

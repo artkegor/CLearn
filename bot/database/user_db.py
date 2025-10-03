@@ -12,16 +12,19 @@ class UserDB(BaseDB):
         super().__init__()
         self.users: Collection = self.db['users']
 
-    def add_user(self, user_id: int, username: str) -> None:
+    def add_user(self, user_id: int, username: str, register_date: str) -> None:
         if not self.users.find_one({'user_id': user_id}):
-            self.users.insert_one({'user_id': user_id, 'username': username})
+            self.users.insert_one(
+                {
+                    'user_id': user_id,
+                    'username': username,
+                    'register_date': register_date
+                }
+            )
             logger.info(f"Added new user: {user_id} with username: {username}")
 
     def get_user(self, user_id: int) -> dict:
         return self.users.find_one({'user_id': user_id})
-
-    def update_username(self, user_id: int, new_username: str) -> None:
-        self.users.update_one({'user_id': user_id}, {'$set': {'username': new_username}})
 
     def delete_user(self, user_id: int) -> None:
         self.users.delete_one({'user_id': user_id})

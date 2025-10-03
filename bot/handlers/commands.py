@@ -1,6 +1,9 @@
+import datetime
 from bot.database.user_db import UserDB
 from logging_config import setup_logging
 from telebot.async_telebot import AsyncTeleBot
+
+import bot.keyboards.inline as inline_keyboards
 
 # Initialize logger
 logger = setup_logging()
@@ -10,15 +13,29 @@ user_db = UserDB()
 
 
 # Function to handle commands
-def commands_handler(bot: AsyncTeleBot):
+async def commands_handler(bot: AsyncTeleBot):
     @bot.message_handler(commands=['start'])
-    def start_command(message):
+    async def start_command(message):
         chat_id = message.chat.id
+        try:
+            time_now = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+            logger.info(f"User {chat_id} started the bot.")
 
-        logger.info(f"User {chat_id} started the bot.")
-        user_db.add_user(chat_id, message.from_user.username or "")
+            user_db.add_user(
+                user_id=chat_id,
+                username=message.from_user.username or "",
+                register_date=time_now
+            )
 
-        bot.send_message(
-            chat_id=chat_id,
-            text="Welcome to the bot! Use /help to see available commands."
-        )
+            await bot.send_message(
+                chat_id=chat_id,
+                text="🤖 Добро пожаловать в бота для изучения языка C!\n\n"
+                     "👇 Нажмите кнопку ниже, чтобы начать:",
+                reply_markup=inline_keyboards.main_menu_keyboard()
+            )
+        except Exception as e:
+            logger.error(f"Error in start_command: {e}")
+            await bot.send_message(
+                chat_id=chat_id,
+                text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
+            )

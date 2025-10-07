@@ -18,6 +18,7 @@ async def commands_handler(bot: AsyncTeleBot):
     @bot.message_handler(commands=['start'])
     async def start_command(message):
         chat_id = message.chat.id
+
         try:
             time_now = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             logger.info(f"User {chat_id} started the bot.")

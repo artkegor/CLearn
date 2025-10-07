@@ -24,7 +24,15 @@ class UserDB(BaseDB):
             logger.info(f"Added new user: {user_id} with username: {username}")
 
     def get_user(self, user_id: int) -> dict:
-        return self.users.find_one({'user_id': user_id})
+        return self.users.find_one(
+            {
+                'user_id': user_id
+            }
+        )
 
     def delete_user(self, user_id: int) -> None:
-        self.users.delete_one({'user_id': user_id})
+        self.users.delete_one(
+            {
+                'user_id': user_id
+            }
+        )

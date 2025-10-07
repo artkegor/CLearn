@@ -26,7 +26,11 @@ class FeedbackDB(BaseDB):
     def mark_feedback_as_answered(self, message_id: int) -> None:
         self.feedbacks.update_one(
             filter={'message_id': message_id},
-            update={'$set': {'status': 'answered'}}
+            update={
+                '$set': {
+                    'status': 'answered'
+                }
+            }
         )
 
     def get_feedback(self, message_id: int) -> dict:

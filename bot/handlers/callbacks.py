@@ -23,6 +23,7 @@ async def callbacks_handler(bot: AsyncTeleBot):
     @bot.callback_query_handler(func=lambda call: call.data == "feedback")
     async def feedback_callback(call):
         chat_id = call.message.chat.id
+
         try:
             await bot.edit_message_text(
                 chat_id=chat_id,
@@ -47,6 +48,7 @@ async def callbacks_handler(bot: AsyncTeleBot):
     @bot.callback_query_handler(func=lambda call: call.data == "solve_task")
     async def start_learning_callback(call):
         chat_id = call.message.chat.id
+
         try:
             await bot.edit_message_text(
                 chat_id=chat_id,

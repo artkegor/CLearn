@@ -8,12 +8,13 @@ import bot.keyboards.inline as inline_keyboards
 # Initialize logger
 logger = setup_logging()
 
-# Initialize user database
+# Initialize database
 user_db = UserDB()
 
 
 # Function to handle commands
 async def commands_handler(bot: AsyncTeleBot):
+    # Handler for /start command
     @bot.message_handler(commands=['start'])
     async def start_command(message):
         chat_id = message.chat.id

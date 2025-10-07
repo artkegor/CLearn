@@ -8,7 +8,7 @@ import bot.keyboards.inline as inline_keyboards
 # Initialize logger
 logger = setup_logging()
 
-# Initialize user database
+# Initialize database
 user_db = UserDB()
 
 # Constants
@@ -19,6 +19,7 @@ STATES = Config.BotStates
 
 # Function to handle commands
 async def callbacks_handler(bot: AsyncTeleBot):
+    # Handler for feedback button
     @bot.callback_query_handler(func=lambda call: call.data == "feedback")
     async def feedback_callback(call):
         chat_id = call.message.chat.id
@@ -42,6 +43,7 @@ async def callbacks_handler(bot: AsyncTeleBot):
                 text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
             )
 
+    # Handler for solve task button
     @bot.callback_query_handler(func=lambda call: call.data == "solve_task")
     async def start_learning_callback(call):
         chat_id = call.message.chat.id
@@ -59,6 +61,7 @@ async def callbacks_handler(bot: AsyncTeleBot):
                 text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
             )
 
+    # Handler for task theme selection
     @bot.callback_query_handler(func=lambda call: call.data.startswith("task_theme_"))
     async def choose_task_theme_callback(call):
         chat_id = call.message.chat.id
@@ -80,6 +83,7 @@ async def callbacks_handler(bot: AsyncTeleBot):
                 text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
             )
 
+    # Handler for task difficulty selection
     @bot.callback_query_handler(func=lambda call: call.data.startswith("task_difficulty_"))
     async def choose_task_difficulty_callback(call):
         chat_id = call.message.chat.id

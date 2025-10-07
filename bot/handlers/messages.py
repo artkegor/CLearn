@@ -11,7 +11,7 @@ import bot.keyboards.inline as inline_keyboards
 # Initialize logger
 logger = setup_logging()
 
-# Initialize user database
+# Initialize database
 user_db = UserDB()
 feedback_db = FeedbackDB()
 
@@ -21,8 +21,9 @@ STATES = Config.BotStates
 BOT_ID = Config.BOT_ID
 
 
-# Function to handle commands
+# Function to handle all messages
 async def messages_handler(bot: AsyncTeleBot):
+    # Handler for feedback messages
     @bot.message_handler(func=lambda message: True, state=STATES.WAITING_FOR_FEEDBACK,
                          content_types=['text', 'photo', 'video', 'document', 'audio'])
     async def handle_feedback(message):
@@ -66,6 +67,7 @@ async def messages_handler(bot: AsyncTeleBot):
                 text="❗ Произошла ошибка при отправке вашего отзыва. Пожалуйста, попробуйте снова позже."
             )
 
+    # Handler for admin responses to feedback
     @bot.message_handler(func=lambda message: message.chat.id == FEEDBACK_CHAT_ID
                                               and message.reply_to_message
                                               and message.reply_to_message.from_user.id == BOT_ID,
@@ -82,6 +84,7 @@ async def messages_handler(bot: AsyncTeleBot):
                         text="❗ Этот отзыв уже был обработан."
                     )
                     return
+
                 user_id = feedback['user_id']
                 await bot.send_message(
                     chat_id=user_id,

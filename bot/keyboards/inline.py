@@ -61,12 +61,18 @@ def choose_task_theme_keyboard():
 
 # Choose task difficulty keyboard
 def choose_task_difficulty_keyboard(theme_id: str):
-    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard = InlineKeyboardMarkup(row_width=3)
     buttons = [
         InlineKeyboardButton(
             text=text,
             callback_data=f"task_difficulty_{theme_id}_{difficulty_id}"
         ) for difficulty_id, text in DIFFICULTIES.items()
     ]
+    buttons.append(
+        InlineKeyboardButton(
+            text="⬅️ В главное меню",
+            callback_data="back_to_main_menu"
+        )
+    )
     keyboard.add(*buttons)
     return keyboard

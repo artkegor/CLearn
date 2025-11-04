@@ -1,9 +1,10 @@
 import datetime
-from bot.database.user_db import UserDB
+from database.user_db import UserDB
 from logging_config import setup_logging
 from telebot.async_telebot import AsyncTeleBot
 
 import bot.keyboards.inline as inline_keyboards
+from models.database_models import UserModel
 
 # Initialize logger
 logger = setup_logging()
@@ -23,10 +24,13 @@ async def commands_handler(bot: AsyncTeleBot):
             time_now = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
             logger.info(f"User {chat_id} started the bot.")
 
-            user_db.add_user(
+            user = UserModel(
                 user_id=chat_id,
                 username=message.from_user.username or "",
                 register_date=time_now
+            )
+            user_db.add_user(
+                user=user
             )
 
             await bot.send_message(

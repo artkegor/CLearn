@@ -1,11 +1,11 @@
 import datetime
 
 from config import Config
-from bot.database.user_db import UserDB
-from bot.database.feedback_db import FeedbackDB
+from database.user_db import UserDB
 from logging_config import setup_logging
+from database.feedback_db import FeedbackDB
 from telebot.async_telebot import AsyncTeleBot
-
+from models.database_models import FeedbackModel
 import bot.keyboards.inline as inline_keyboards
 
 # Initialize logger
@@ -42,10 +42,13 @@ async def messages_handler(bot: AsyncTeleBot):
                 message_id=message.message_id
             )
 
-            feedback_db.add_feedback(
+            feedback = FeedbackModel(
                 user_id=chat_id,
                 message_id=message_id.message_id,
                 date=time_now
+            )
+            feedback_db.add_feedback(
+                feedback=feedback
             )
 
             await bot.send_message(
@@ -78,14 +81,14 @@ async def messages_handler(bot: AsyncTeleBot):
             feedback = feedback_db.get_feedback(original_message_id)
 
             if feedback:
-                if feedback['status'] != 'new':
+                if feedback.status != 'new':
                     await bot.send_message(
                         chat_id=FEEDBACK_CHAT_ID,
                         text="❗ Этот отзыв уже был обработан."
                     )
                     return
 
-                user_id = feedback['user_id']
+                user_id = feedback.user_id
                 await bot.send_message(
                     chat_id=user_id,
                     text=f"📢 Ответ на ваш отзыв:"

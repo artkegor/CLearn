@@ -101,3 +101,28 @@ def task_interaction_keyboard(task_id: str):
     ]
     keyboard.add(*buttons)
     return keyboard
+
+
+# After submission keyboard
+def after_submission_keyboard(task_id: str):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    buttons = [
+        InlineKeyboardButton(
+            text="✅ Сдать другое решение",
+            callback_data=f"submit_solution_{task_id}"
+        ),
+        InlineKeyboardButton(
+            text="🧩 Показать решение",
+            callback_data=f"show_solution_{task_id}"
+        ),
+        InlineKeyboardButton(
+            text="🔄 Решить другое задание",
+            callback_data="solve_task"
+        ),
+        InlineKeyboardButton(
+            text="⬅️ В главное меню",
+            callback_data="back_to_main_menu"
+        )
+    ]
+    keyboard.add(*buttons)
+    return keyboard

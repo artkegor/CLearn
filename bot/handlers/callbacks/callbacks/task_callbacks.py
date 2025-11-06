@@ -1,5 +1,6 @@
 import random
 
+from html import escape
 from config import Config
 from database.user_db import UserDB
 from database.task_db import TaskDB
@@ -104,13 +105,42 @@ async def callbacks_handler(bot: AsyncTeleBot):
                 text=f"✅ Вы выбрали тему: {theme_name}\n"
                      f"🧠 Сложность: {difficulty_name}\n\n"
                      "📝 Вот ваше задание:\n\n"
-                     "" + task["task_text"] + "\n\n",
+                     "" + escape(task["task_text"]) + "\n\n",
                 reply_markup=inline_keyboards.task_interaction_keyboard(
                     task_id=task_id
                 )
             )
         except Exception as e:
             logger.error(f"Error in choose_task_difficulty_callback: {e}")
+            await bot.send_message(
+                chat_id=chat_id,
+                text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
+            )
+
+    # Handler for submitting solution
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("submit_solution_"))
+    async def submit_solution_callback(call):
+        chat_id = call.message.chat.id
+        task_id = call.data.split("_")[-1]
+
+        try:
+            await bot.send_message(
+                chat_id=chat_id,
+                text="✍️ Пожалуйста, отправьте ваше решение в следующем сообщении. "
+                     "Убедитесь, что вы отправляете полный код на C."
+            )
+            await bot.set_state(
+                chat_id=chat_id,
+                user_id=chat_id,
+                state=STATES.WAITING_FOR_TASK_SOLUTION
+            )
+            async with bot.retrieve_data(
+                    chat_id=chat_id,
+                    user_id=chat_id
+            ) as data:
+                data["current_task_id"] = task_id
+        except Exception as e:
+            logger.error(f"Error in submit_solution_callback: {e}")
             await bot.send_message(
                 chat_id=chat_id,
                 text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."

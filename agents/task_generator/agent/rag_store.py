@@ -17,9 +17,11 @@ def get_embeddings(model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
 
 
 class RAGStore:
-    def __init__(self, vector_db_dir: str = "./vector_db",
-                 knowledge_base_dir: str = "./c_knowledge_data",
-                 embeddings_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self,
+                 vector_db_dir: str = "./agents/task_generator/vector_db",
+                 knowledge_base_dir: str = "./agents/task_generator/c_knowledge_data",
+                 embeddings_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+                 ):
         self.vector_db_dir = vector_db_dir
         self.knowledge_base_dir = knowledge_base_dir
         self.embeddings = get_embeddings(embeddings_model)

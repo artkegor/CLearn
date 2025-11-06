@@ -7,9 +7,11 @@ from config import Config
 
 
 class TaskGenerator:
-    def __init__(self, deepseek_api_key: str = Config.DEEPSEEK_API_KEY,
-                 vector_db_dir: str = "./vector_db",
-                 knowledge_base_dir: str = "./c_knowledge_data"):
+    def __init__(self,
+                 deepseek_api_key: str = Config.DEEPSEEK_API_KEY,
+                 vector_db_dir: str = "./agents/task_generator/vector_db",
+                 knowledge_base_dir: str = "./agents/task_generator/c_knowledge_data"
+                 ):
         self.llm = DeepSeekLLM(api_key=deepseek_api_key)
         self.rag = RAGStore(vector_db_dir=vector_db_dir,
                             knowledge_base_dir=knowledge_base_dir)

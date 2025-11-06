@@ -1,3 +1,4 @@
+import os
 import asyncio
 from telebot.types import BotCommand
 from logging_config import setup_logging
@@ -9,6 +10,9 @@ from agents.task_generator.agent.task_generator import TaskGenerator
 
 # Main entry point for the bot
 async def main():
+    # Set environment variable to disable tokenizers parallelism
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
     # Set up logging and get bot information
     logger = setup_logging()
     bot_info = await bot.get_me()

@@ -23,7 +23,7 @@ async def run_c_task_in_sandbox(filename: str, test_cases: list[dict]) -> dict:
     compile_cmd = f"docker run --rm --network none --pids-limit 64 --memory 256m --memory-swap 256m " \
                   f"--cpus 0.5 --read-only --tmpfs /tmp:exec,mode=1777 --security-opt no-new-privileges:true " \
                   f"--cap-drop ALL -v {workdir}:/sandbox:rw -w /sandbox c-sandbox " \
-                  f"gcc {shlex.quote(os.path.basename(filename))} -o user -lm 2> compile_err.txt"
+                  f"gcc {shlex.quote(os.path.basename(filename))} -o user -lm 2> app.log"
 
     compile_proc = await asyncio.create_subprocess_shell(
         compile_cmd,
@@ -36,7 +36,7 @@ async def run_c_task_in_sandbox(filename: str, test_cases: list[dict]) -> dict:
 
     if compile_proc.returncode != 0:
         logger.error(f"Compilation failed for {filename} in sandbox with return code {compile_proc.returncode}.")
-        err_path = os.path.join(workdir, "compile_err.txt")
+        err_path = os.path.join(workdir, "app.log")
         err = ""
         if os.path.exists(err_path):
             with open(err_path) as f:
@@ -48,8 +48,8 @@ async def run_c_task_in_sandbox(filename: str, test_cases: list[dict]) -> dict:
 
     # Test cases execution
     for i, t in enumerate(test_cases, start=1):
-        input_data = t["input"].strip()
-        expected = t["expected_output"].strip()
+        input_data = str(t["input"]).strip()
+        expected = str(t["expected_output"]).strip()
 
         run_cmd = f'docker run --rm --network none --pids-limit 64 --memory 128m --memory-swap 128m ' \
                   f'--cpus 0.5 --read-only --tmpfs /tmp:exec,mode=1777 --security-opt no-new-privileges:true ' \

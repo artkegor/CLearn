@@ -19,9 +19,13 @@ def main_menu_keyboard():
             callback_data="profile"
         ),
         InlineKeyboardButton(
+            text="📊 Статистика",
+            callback_data="statistics"
+        ),
+        InlineKeyboardButton(
             text="⁉️ Обратная связь",
             callback_data="feedback"
-        ),
+        )
     ]
     keyboard.add(*buttons)
     return keyboard
@@ -35,6 +39,23 @@ def back_to_main_menu_button():
             text="⬅️ В главное меню",
             callback_data="back_to_main_menu"
         )
+    ]
+    keyboard.add(*buttons)
+    return keyboard
+
+
+# Statistics keyboard
+def statistics_menu_keyboard():
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    buttons = [
+        InlineKeyboardButton(
+            text="📈 Краткая статистика",
+            callback_data="summary_brief"
+        ),
+        InlineKeyboardButton(
+            text="📊 Подробная статистика",
+            callback_data="summary_detailed"
+        ),
     ]
     keyboard.add(*buttons)
     return keyboard
@@ -104,12 +125,16 @@ def task_interaction_keyboard(task_id: str):
 
 
 # After submission keyboard
-def after_submission_keyboard(task_id: str):
+def after_submission_keyboard(task_id: str, solution_id: str):
     keyboard = InlineKeyboardMarkup(row_width=1)
     buttons = [
         InlineKeyboardButton(
             text="✅ Сдать другое решение",
             callback_data=f"submit_solution_{task_id}"
+        ),
+        InlineKeyboardButton(
+            text="💡 Проанализировать код",
+            callback_data=f"analyze_solution_{solution_id}"
         ),
         InlineKeyboardButton(
             text="🧩 Показать решение",

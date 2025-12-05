@@ -30,6 +30,7 @@ class UserModel(BaseModel):
     user_id: int
     username: str
     register_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    solutions: List[Dict[str, Any]] = []
 
     @field_validator("register_date", mode="before")
     def parse_custom_date(cls, value):

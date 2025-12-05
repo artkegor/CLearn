@@ -9,13 +9,15 @@ from logging_config import setup_logging
 from telebot.async_telebot import AsyncTeleBot
 
 import bot.keyboards.inline as inline_keyboards
-import agents.task_generator.agent_instance as agent_instance
+from agents.task_generator.agent_instance import generate_task_full
+from agents.code_analyzer.agent_instance import analyze_code
 
 # Initialize logger
 logger = setup_logging()
 
 # Initialize database
 user_db = UserDB()
+task_db = TaskDB()
 
 # Constants
 THEMES = Config.C_TOPICS
@@ -82,8 +84,10 @@ async def callbacks_handler(bot: AsyncTeleBot):
                 text="⏳ Генерируем задание, пожалуйста подождите..."
             )
 
-            task = agent_instance.task_generator.create_complete_task(topic_id=theme_id, difficulty=int(difficulty_id))
+            logger.info(f"Generating task for theme: {theme_name}, difficulty: {difficulty_name}")
+            task = generate_task_full(topic_id=theme_id, difficulty=int(difficulty_id))
             task_id = str(random.randint(100000, 999999))
+            print(task)
 
             task_model = TaskModel(
                 task_id=task_id,
@@ -166,6 +170,55 @@ async def callbacks_handler(bot: AsyncTeleBot):
             )
         except Exception as e:
             logger.error(f"Error in show_solution_callback: {e}")
+            await bot.send_message(
+                chat_id=chat_id,
+                text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
+            )
+
+    # Handler for analyzing solution
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("analyze_solution_"))
+    async def analyze_solution_callback(call):
+        chat_id = call.message.chat.id
+        solution_id = call.data.split("_")[-1]
+
+        try:
+            await bot.delete_message(
+                chat_id=chat_id,
+                message_id=call.message.message_id
+            )
+
+            waiter = await bot.send_message(
+                chat_id=chat_id,
+                text="🔍 Анализируем ваше решение, пожалуйста подождите..."
+            )
+
+            user = user_db.get_user(chat_id)
+            if not user:
+                raise Exception("User not found")
+
+            solution = next((sol for sol in user.solutions if sol['solution_id'] == solution_id), None)
+            if not solution:
+                raise Exception("Solution not found")
+
+            analysis_result = analyze_code(
+                task_text=solution['task_id'],
+                user_code=solution['solution_code'],
+                error_text=solution['log']
+            )
+
+            await bot.delete_message(
+                chat_id=chat_id,
+                message_id=waiter.message_id
+            )
+
+            logger.info(f"Analyzed solution {solution_id} for user {chat_id}")
+
+            await bot.send_message(
+                chat_id=chat_id,
+                text=escape(f"🛠️ Анализ вашего решения:\n\n{analysis_result}")
+            )
+        except Exception as e:
+            logger.error(f"Error in analyze_solution_callback: {e}")
             await bot.send_message(
                 chat_id=chat_id,
                 text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."

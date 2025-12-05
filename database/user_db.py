@@ -1,3 +1,4 @@
+import random
 from typing import Optional
 from pymongo.collection import Collection
 from database.base_db import BaseDB
@@ -5,6 +6,7 @@ from logging_config import setup_logging
 from models.database_models import UserModel
 
 logger = setup_logging()
+
 
 # UserDB handles operations related to users in the database.
 class UserDB(BaseDB):
@@ -25,3 +27,21 @@ class UserDB(BaseDB):
         result = self.users.delete_one({"user_id": user_id})
         if result.deleted_count:
             logger.info(f"Deleted user: {user_id}")
+
+    def add_solution(self, user_id: int, task_id: str, solution_code: str, score: int, log: str) -> str:
+        solution_id = str(random.randint(100000, 999999))
+        self.users.update_one(
+            {"user_id": user_id},
+            {"$push":
+                {"solutions": {
+                    "solution_id": solution_id,
+                    "task_id": task_id,
+                    "solution_code": solution_code,
+                    "score": score,
+                    "log": log
+                }
+                }
+            }
+        )
+        logger.info(f"Added solution for user: {user_id}, task: {task_id}")
+        return solution_id

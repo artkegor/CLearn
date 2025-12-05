@@ -4,8 +4,6 @@ from telebot.types import BotCommand
 from logging_config import setup_logging
 from bot.bot import bot, register_handlers
 from telebot.async_telebot import asyncio_filters
-import agents.task_generator.agent_instance as agent_instance
-from agents.task_generator.agent.task_generator import TaskGenerator
 
 
 # Main entry point for the bot
@@ -29,10 +27,6 @@ async def main():
             BotCommand('start', 'Запустить бота')
         ]
     )
-
-    # Initialize agents
-    agent_instance.task_generator = TaskGenerator()
-    logger.info("Task Generator agent initialized.")
 
     # Start bot polling
     logger.info("Starting the bot...")

@@ -17,6 +17,6 @@ class TaskDB(BaseDB):
         self.tasks.insert_one(task.model_dump(by_alias=True))
         logger.info(f"Added task number: {task.task_id}")
 
-    def get_task(self, message_id: int) -> Optional[TaskModel]:
-        doc = self.tasks.find_one({"message_id": message_id})
+    def get_task(self, task_id: int) -> Optional[TaskModel]:
+        doc = self.tasks.find_one({"task_id": task_id})
         return TaskModel(**doc) if doc else None

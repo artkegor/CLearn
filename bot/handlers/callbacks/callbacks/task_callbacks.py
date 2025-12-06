@@ -87,7 +87,6 @@ async def callbacks_handler(bot: AsyncTeleBot):
             logger.info(f"Generating task for theme: {theme_name}, difficulty: {difficulty_name}")
             task = generate_task_full(topic_id=theme_id, difficulty=int(difficulty_id))
             task_id = str(random.randint(100000, 999999))
-            print(task)
 
             task_model = TaskModel(
                 task_id=task_id,

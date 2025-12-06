@@ -4,6 +4,7 @@ from agents.task_generator.tools.generate_test_cases import generate_test_cases_
 from agents.task_generator.tools.generate_solution import generate_solution_tool
 from agents.task_generator.llm.model import llm
 
+
 def build_agent():
     tools = [
         Tool(

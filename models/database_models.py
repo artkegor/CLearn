@@ -31,6 +31,7 @@ class UserModel(BaseModel):
     username: str
     register_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     solutions: List[Dict[str, Any]] = []
+    solved_quizzes: List[Dict[str, Any]] = []
 
     @field_validator("register_date", mode="before")
     def parse_custom_date(cls, value):
@@ -55,6 +56,15 @@ class TaskModel(BaseModel):
     task_text: str
     test_cases: List[Dict[str, Any]]
     solution_code: str
+
+
+# Model representing a quiz
+class QuizModel(BaseModel):
+    quiz_id: str
+    topic: str
+    type: str
+    quiz_title: str
+    questions: List[Dict[str, Any]]
 
 
 # Base model for MongoDB documents

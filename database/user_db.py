@@ -45,3 +45,16 @@ class UserDB(BaseDB):
         )
         logger.info(f"Added solution for user: {user_id}, task: {task_id}")
         return solution_id
+
+    def add_solved_quiz(self, user_id: int, quiz_id: str, score: int) -> None:
+        self.users.update_one(
+            {"user_id": user_id},
+            {"$push":
+                {"solved_quizzes": {
+                    "quiz_id": quiz_id,
+                    "score": score
+                }
+                }
+            }
+        )
+        logger.info(f"Added solved quiz for user: {user_id}, quiz: {quiz_id}")

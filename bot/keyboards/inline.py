@@ -15,6 +15,10 @@ def main_menu_keyboard():
             callback_data="solve_task"
         ),
         InlineKeyboardButton(
+            text="🎬 Пройти викторину",
+            callback_data="take_quiz"
+        ),
+        InlineKeyboardButton(
             text="👤 Профиль",
             callback_data="profile"
         ),
@@ -147,6 +151,75 @@ def after_submission_keyboard(task_id: str, solution_id: str):
         InlineKeyboardButton(
             text="⬅️ В главное меню",
             callback_data="back_to_main_menu"
+        )
+    ]
+    keyboard.add(*buttons)
+    return keyboard
+
+
+# Choose quiz theme keyboard
+def choose_quiz_theme_keyboard():
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    buttons = [
+        InlineKeyboardButton(
+            text=text,
+            callback_data=f"quiz_theme_{theme_id}"
+        ) for theme_id, text in THEMES.items()
+    ]
+    buttons.append(
+        InlineKeyboardButton(
+            text="⬅️ В главное меню",
+            callback_data="back_to_main_menu"
+        )
+    )
+    keyboard.add(*buttons)
+    return keyboard
+
+
+# Choose quiz type keyboard
+def choose_quiz_type_keyboard(theme_id: str):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    buttons = [
+        InlineKeyboardButton(
+            text="⚡️ Блиц-викторина",
+            callback_data=f"quiz_type_blitz_{theme_id}"
+        ),
+        InlineKeyboardButton(
+            text="🧠 Мини-викторина",
+            callback_data=f"quiz_type_mini_{theme_id}"
+        ),
+        InlineKeyboardButton(
+            text="📚 Полная викторина",
+            callback_data=f"quiz_type_full_{theme_id}"
+        ),
+        InlineKeyboardButton(
+            text="⬅️ В главное меню",
+            callback_data="back_to_main_menu"
+        )
+    ]
+    keyboard.add(*buttons)
+    return keyboard
+
+
+# Quiz question keyboard
+def quiz_question_keyboard(quiz_id: str, question_index, correct_answers_count: int):
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    buttons = [
+        InlineKeyboardButton(
+            text="1️⃣",
+            callback_data=f"quiz_answer_{quiz_id}_{question_index}_0_{correct_answers_count}"
+        ),
+        InlineKeyboardButton(
+            text="2️⃣",
+            callback_data=f"quiz_answer_{quiz_id}_{question_index}_1_{correct_answers_count}"
+        ),
+        InlineKeyboardButton(
+            text="3️⃣",
+            callback_data=f"quiz_answer_{quiz_id}_{question_index}_2_{correct_answers_count}"
+        ),
+        InlineKeyboardButton(
+            text="4️⃣",
+            callback_data=f"quiz_answer_{quiz_id}_{question_index}_3_{correct_answers_count}"
         )
     ]
     keyboard.add(*buttons)

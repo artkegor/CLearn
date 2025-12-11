@@ -3,7 +3,6 @@
 .idea
 __pycache__/
 agents/task_generator/vector_db
-agents/task_generator/c_knowledge_data
 agents/quiz_generator/knowledge
 temp
 app.log

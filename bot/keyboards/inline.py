@@ -19,13 +19,22 @@ def main_menu_keyboard():
             callback_data="take_quiz"
         ),
         InlineKeyboardButton(
-            text="👤 Профиль",
-            callback_data="profile"
+            text="🧠 Спросить у ИИ-репетитора",
+            callback_data="ask_tutor"
+        ),
+        InlineKeyboardButton(
+            text="✨ Волшебный агент",
+            callback_data="magic_agent"
         ),
         InlineKeyboardButton(
             text="📊 Статистика",
             callback_data="statistics"
         ),
+        InlineKeyboardButton(
+            text="👤 Профиль",
+            callback_data="profile"
+        ),
+
         InlineKeyboardButton(
             text="⁉️ Обратная связь",
             callback_data="feedback"

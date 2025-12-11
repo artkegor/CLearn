@@ -20,3 +20,10 @@ class TaskDB(BaseDB):
     def get_task(self, task_id: int) -> Optional[TaskModel]:
         doc = self.tasks.find_one({"task_id": task_id})
         return TaskModel(**doc) if doc else None
+
+    def update_task_solution(self, task_id: int, solution_code: str) -> None:
+        self.tasks.update_one(
+            {"task_id": task_id},
+            {"$set": {"solution_code": solution_code}}
+        )
+        logger.info(f"Updated solution for task number: {task_id}")

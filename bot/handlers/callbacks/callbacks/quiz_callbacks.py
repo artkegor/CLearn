@@ -178,9 +178,6 @@ async def callbacks_handler(bot: AsyncTeleBot):
                          f"Ваш результат: {correct_answers_count} из {len(quiz.questions)} правильных ответов.",
                     reply_markup=inline.back_to_main_menu_button()
                 )
-
-
-
         except Exception as e:
             logger.error(f"Error in quiz_answer_callback: {e}")
             await bot.send_message(

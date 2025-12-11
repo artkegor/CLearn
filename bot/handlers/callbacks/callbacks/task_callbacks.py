@@ -9,8 +9,8 @@ from logging_config import setup_logging
 from telebot.async_telebot import AsyncTeleBot
 
 import bot.keyboards.inline as inline_keyboards
-from agents.task_generator.agent_instance import generate_task_full
-from agents.code_analyzer.agent_instance import analyze_code
+from agents.task_generator.agent_instance import generate_task_full, regenerate_task_solution
+from agents.code_analyzer.agent_instance import analyze_code, compare_task_and_solution
 
 # Initialize logger
 logger = setup_logging()
@@ -161,6 +161,25 @@ async def callbacks_handler(bot: AsyncTeleBot):
                 raise Exception("Task not found")
 
             solution_code = task.get("solution_code", "Решение не найдено.")
+            task_text = task.get("task_text", "")
+
+            answer = compare_task_and_solution(
+                task_text=task_text,
+                solution_code=solution_code
+            )
+            while not answer:
+                new_code = regenerate_task_solution(
+                    task_text=task_text
+                )
+                task_db.update_task_solution(
+                    task_id=int(task_id),
+                    solution_code=new_code.get("solution_code", "")
+                )
+                solution_code = new_code.get("solution_code", "")
+                answer = compare_task_and_solution(
+                    task_text=task_text,
+                    solution_code=solution_code
+                )
 
             await bot.send_message(
                 chat_id=chat_id,

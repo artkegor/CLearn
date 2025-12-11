@@ -28,6 +28,8 @@ class Config:
     class BotStates(StatesGroup):
         WAITING_FOR_FEEDBACK = State()
         WAITING_FOR_TASK_SOLUTION = State()
+        WAITING_FOR_TUTOR_QUESTION = State()
+        WAITING_FOR_MAGIC_AGENT_INPUT = State()
 
     # Other configuration settings
     C_TOPICS = {

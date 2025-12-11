@@ -37,3 +37,16 @@ def generate_task_full(topic_id: str, difficulty: int):
         "test_cases": test_cases,
         "solution_code": solution_code
     }
+
+
+def regenerate_task_solution(task_text: str):
+    # Regenerate solution for an existing task
+    solution_result = generate_solution_tool.invoke({"task_text": task_text})
+    if not solution_result.get("success"):
+        return {"success": False, "error": f"Ошибка генерации решения: {solution_result.get('error')}"}
+    solution_code = solution_result["solution_code"]
+
+    return {
+        "success": True,
+        "solution_code": solution_code
+    }

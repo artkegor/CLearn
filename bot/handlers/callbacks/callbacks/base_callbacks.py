@@ -46,6 +46,29 @@ async def callbacks_handler(bot: AsyncTeleBot):
                 text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
             )
 
+    # Ask tutor button handler
+    @bot.callback_query_handler(func=lambda call: call.data == "ask_tutor")
+    async def ask_tutor_callback(call):
+        chat_id = call.message.chat.id
+
+        try:
+            await bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=call.message.message_id,
+                text="🤖 Пожалуйста, введите ваш вопрос для ИИ-репетитора:",
+                reply_markup=inline_keyboards.back_to_main_menu_button()
+            )
+            await bot.set_state(
+                chat_id=chat_id,
+                user_id=chat_id,
+                state=STATES.WAITING_FOR_TUTOR_QUESTION
+            )
+        except Exception as e:
+            logger.error(f"Error in ask_tutor_callback: {e}")
+            await bot.send_message(
+                chat_id=chat_id,
+                text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
+            )
     # Profile button handler
     @bot.callback_query_handler(func=lambda call: call.data == "profile")
     async def profile_callback(call):
@@ -159,6 +182,30 @@ async def callbacks_handler(bot: AsyncTeleBot):
             )
         except Exception as e:
             logger.error(f"Error in feedback_callback: {e}")
+            await bot.send_message(
+                chat_id=chat_id,
+                text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."
+            )
+
+    # Magic agent button handler
+    @bot.callback_query_handler(func=lambda call: call.data == "magic_agent")
+    async def magic_agent_callback(call):
+        chat_id = call.message.chat.id
+
+        try:
+            await bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=call.message.message_id,
+                text="🪄 Пожалуйста, введите ваш запрос для Волшебного агента:",
+                reply_markup=inline_keyboards.back_to_main_menu_button()
+            )
+            await bot.set_state(
+                chat_id=chat_id,
+                user_id=chat_id,
+                state=STATES.WAITING_FOR_MAGIC_AGENT_INPUT
+            )
+        except Exception as e:
+            logger.error(f"Error in magic_agent_callback: {e}")
             await bot.send_message(
                 chat_id=chat_id,
                 text="❗ Произошла ошибка. Пожалуйста, попробуйте снова позже."

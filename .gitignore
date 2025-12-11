@@ -8,3 +8,4 @@ agents/quiz_generator/knowledge
 temp
 app.log
 agents/quiz_generator/faiss_index
+c_tutor_all_vectorstores

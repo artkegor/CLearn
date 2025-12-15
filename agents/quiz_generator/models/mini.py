@@ -13,4 +13,4 @@ class MiniQuiz(BaseModel):
     topic: str
     type: str = "mini"
     context_snippet: str = ""
-    questions: List[MiniQuestion] = Field(..., min_length=1, max_length=2)
+    questions: List[MiniQuestion] = Field(..., min_length=1, max_length=7)

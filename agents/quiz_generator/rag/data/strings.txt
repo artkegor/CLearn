@@ -1,0 +1,1129 @@
+# СТРОКИ И ФУНКЦИИ ДЛЯ РАБОТЫ СО СТРОКАМИ В ЯЗЫКЕ C - ПОЛНОЕ РУКОВОДСТВО
+
+## 1. ОСНОВЫ СТРОК В C
+
+### Что такое строка в C
+Строка в C — это массив символов, заканчивающийся нулевым символом '\0' (null terminator). Это важно, так как функции для работы со строками используют '\0' для определения конца строки.
+
+### Объявление строк
+```c
+#include <stdio.h>
+
+int main() {
+    // Способ 1: строковый литерал (read-only)
+    const char *str1 = "Hello";  // Указатель на read-only область памяти
+
+    // Способ 2: массив символов (изменяемый)
+    char str2[] = "World";       // Массив символов, последний = '\0'
+
+    // Способ 3: массив символов с явным размером
+    char str3[50] = "C Programming";  // Оставшиеся символы = '\0'
+
+    // Способ 4: объявление без инициализации
+    char str4[100];              // Содержит мусор!
+
+    // Способ 5: динамическое выделение
+    char *str5 = (char *)malloc(50 * sizeof(char));
+    if (str5 != NULL) {
+        // Используем str5...
+        free(str5);
+    }
+
+    return 0;
+}
+```
+
+### Размер строки
+```c
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str[] = "Hello";
+
+    // Длина строки (без '\0')
+    int length = strlen(str);  // = 5
+    printf("Length: %d\n", length);
+
+    // Размер массива в памяти
+    int arraySize = sizeof(str);  // = 6 (включая '\0')
+    printf("Array size: %d\n", arraySize);
+
+    // ⚠️ ВАЖНО: разница между strlen и sizeof!
+
+    return 0;
+}
+```
+
+### Нулевой символ '\0'
+```c
+#include <stdio.h>
+
+int main() {
+    char str[] = "Hello";
+
+    // Представление в памяти:
+    // str[0] = 'H'
+    // str[1] = 'e'
+    // str[2] = 'l'
+    // str[3] = 'l'
+    // str[4] = 'o'
+    // str[5] = '\0'  <- Нулевой символ!
+
+    // Функции для работы со строками ищут '\0'
+    for (int i = 0; str[i] != '\0'; i++) {
+        printf("%c ", str[i]);
+    }
+    printf("\n");  // H e l l o
+
+    return 0;
+}
+```
+
+## 2. БАЗОВЫЕ ФУНКЦИИ РАБОТЫ СО СТРОКАМИ
+
+### Функция strlen() - длина строки
+```c
+#include <string.h>
+#include <stdio.h>
+
+size_t strlen(const char *str);
+
+// Параметры:
+// str - указатель на строку
+
+// Возвращаемое значение:
+// Длина строки (без '\0')
+
+int main() {
+    printf("Length of 'Hello': %zu\n", strlen("Hello"));        // 5
+    printf("Length of 'World': %zu\n", strlen("World"));        // 5
+    printf("Length of empty string: %zu\n", strlen(""));        // 0
+
+    char name[] = "Alice";
+    printf("Length of name: %zu\n", strlen(name));              // 5
+
+    return 0;
+}
+```
+
+### Функция strcpy() - копирование строки
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strcpy(char *dest, const char *src);
+
+// Параметры:
+// dest - целевая строка
+// src - исходная строка
+
+// Возвращаемое значение:
+// Указатель на dest
+
+// ⚠️ ОПАСНО: не проверяет размер dest!
+
+int main() {
+    char source[] = "Hello";
+    char destination[50];  // Должна быть достаточно большой!
+
+    strcpy(destination, source);
+    printf("Copied: %s\n", destination);  // Hello
+
+    return 0;
+}
+```
+
+### Функция strncpy() - безопасное копирование
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strncpy(char *dest, const char *src, size_t n);
+
+// Параметры:
+// dest - целевая строка
+// src - исходная строка
+// n - максимальное количество символов для копирования
+
+// ✅ БЕЗОПАСНЕЕ чем strcpy
+
+int main() {
+    char source[] = "Hello, World!";
+    char dest[10];
+
+    // Копируем максимум 9 символов (оставляем место для '\0')
+    strncpy(dest, source, sizeof(dest) - 1);
+    dest[sizeof(dest) - 1] = '\0';  // Гарантируем нулевой символ
+
+    printf("Copied: %s\n", dest);  // Hell
+
+    return 0;
+}
+```
+
+### Функция strcmp() - сравнение строк
+```c
+#include <string.h>
+#include <stdio.h>
+
+int strcmp(const char *str1, const char *str2);
+
+// Параметры:
+// str1, str2 - строки для сравнения
+
+// Возвращаемое значение:
+// 0 - строки одинаковые
+// < 0 - str1 меньше str2
+// > 0 - str1 больше str2
+
+int main() {
+    printf("strcmp('Hello', 'Hello'): %d\n", strcmp("Hello", "Hello"));      // 0
+    printf("strcmp('Apple', 'Banana'): %d\n", strcmp("Apple", "Banana"));    // < 0
+    printf("strcmp('Zebra', 'Apple'): %d\n", strcmp("Zebra", "Apple"));      // > 0
+
+    char str1[] = "Alice";
+    char str2[] = "Bob";
+
+    if (strcmp(str1, str2) < 0) {
+        printf("%s идёт перед %s\n", str1, str2);  // Alice идёт перед Bob
+    }
+
+    return 0;
+}
+```
+
+### Функция strncmp() - сравнение первых N символов
+```c
+#include <string.h>
+#include <stdio.h>
+
+int strncmp(const char *str1, const char *str2, size_t n);
+
+// Параметры:
+// str1, str2 - строки для сравнения
+// n - количество символов для сравнения
+
+int main() {
+    printf("strncmp('Hello', 'Help', 3): %d\n", strncmp("Hello", "Help", 3));    // 0
+    printf("strncmp('Hello', 'Help', 4): %d\n", strncmp("Hello", "Help", 4));    // < 0
+
+    // Проверка префикса
+    if (strncmp("Hello", "Hell", 4) == 0) {
+        printf("'Hello' начинается с 'Hell'\n");
+    }
+
+    return 0;
+}
+```
+
+### Функция strcat() - конкатенация строк
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strcat(char *dest, const char *src);
+
+// Параметры:
+// dest - целевая строка (должна быть достаточно большой!)
+// src - исходная строка
+
+// Возвращаемое значение:
+// Указатель на dest
+
+// ⚠️ ОПАСНО: не проверяет размер dest!
+
+int main() {
+    char dest[50] = "Hello";
+    char src[] = " World";
+
+    strcat(dest, src);
+    printf("Result: %s\n", dest);  // Hello World
+
+    strcat(dest, "!");
+    printf("Result: %s\n", dest);  // Hello World!
+
+    return 0;
+}
+```
+
+### Функция strncat() - безопасная конкатенация
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strncat(char *dest, const char *src, size_t n);
+
+// Параметры:
+// dest - целевая строка
+// src - исходная строка
+// n - максимальное количество символов для добавления
+
+// ✅ БЕЗОПАСНЕЕ чем strcat
+
+int main() {
+    char dest[20] = "Hello";
+    char src[] = " World!";
+
+    // Добавляем максимум 10 символов
+    strncat(dest, src, 10);
+    printf("Result: %s\n", dest);  // Hello World!
+
+    return 0;
+}
+```
+
+## 3. ФУНКЦИИ ПОИСКА В СТРОКАХ
+
+### Функция strchr() - поиск символа
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strchr(const char *str, int c);
+
+// Параметры:
+// str - строка для поиска
+// c - символ для поиска
+
+// Возвращаемое значение:
+// Указатель на первый найденный символ
+// NULL если не найден
+
+int main() {
+    const char *str = "Hello, World!";
+
+    char *pos = strchr(str, 'o');
+    if (pos != NULL) {
+        printf("Найден 'o' на позиции %ld\n", pos - str);  // 4
+    }
+
+    // Поиск символа, который не существует
+    pos = strchr(str, 'x');
+    if (pos == NULL) {
+        printf("'x' не найден\n");
+    }
+
+    return 0;
+}
+```
+
+### Функция strrchr() - поиск последнего символа
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strrchr(const char *str, int c);
+
+// Параметры:
+// str - строка для поиска
+// c - символ для поиска
+
+// Возвращаемое значение:
+// Указатель на последний найденный символ
+// NULL если не найден
+
+int main() {
+    const char *filename = "document.txt";
+
+    // Находим последнюю точку
+    char *dot = strrchr(filename, '.');
+    if (dot != NULL) {
+        printf("Расширение: %s\n", dot);  // .txt
+    }
+
+    return 0;
+}
+```
+
+### Функция strstr() - поиск подстроки
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strstr(const char *haystack, const char *needle);
+
+// Параметры:
+// haystack - строка для поиска
+// needle - подстрока для поиска
+
+// Возвращаемое значение:
+// Указатель на первое вхождение needle
+// NULL если не найдена
+
+int main() {
+    const char *text = "Hello, this is a text";
+
+    char *pos = strstr(text, "is");
+    if (pos != NULL) {
+        printf("Найдено 'is' на позиции %ld\n", pos - text);  // 10
+    }
+
+    // Проверка, содержит ли строка подстроку
+    if (strstr(text, "text") != NULL) {
+        printf("Строка содержит 'text'\n");
+    }
+
+    return 0;
+}
+```
+
+### Функция strcspn() - поиск первого символа из набора
+```c
+#include <string.h>
+#include <stdio.h>
+
+size_t strcspn(const char *str, const char *reject);
+
+// Параметры:
+// str - строка для поиска
+// reject - набор символов для поиска
+
+// Возвращаемое значение:
+// Позиция первого найденного символа из reject
+
+int main() {
+    const char *text = "Hello123";
+
+    // Находим позицию первой цифры
+    size_t pos = strcspn(text, "0123456789");
+    printf("Первая цифра на позиции: %zu\n", pos);  // 5
+
+    // Проверка наличия символов пунктуации
+    const char *sentence = "Hello world";
+    if (strcspn(sentence, "!?.;,") == strlen(sentence)) {
+        printf("Нет пунктуации\n");
+    }
+
+    return 0;
+}
+```
+
+### Функция strpbrk() - поиск первого символа из набора
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strpbrk(const char *str, const char *accept);
+
+// Параметры:
+// str - строка для поиска
+// accept - набор символов для поиска
+
+// Возвращаемое значение:
+// Указатель на первый найденный символ
+// NULL если не найден
+
+int main() {
+    const char *text = "Hello World 123";
+
+    // Находим первый пробел
+    char *pos = strpbrk(text, " ");
+    if (pos != NULL) {
+        printf("Пробел найден\n");
+    }
+
+    // Находим первую букву из набора
+    pos = strpbrk(text, "aeiou");
+    if (pos != NULL) {
+        printf("Гласная найдена: %c\n", *pos);  // e
+    }
+
+    return 0;
+}
+```
+
+## 4. ФУНКЦИИ ПРЕОБРАЗОВАНИЯ СТРОК
+
+### Функция atoi() - строка в целое число
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+int atoi(const char *str);
+
+// Параметры:
+// str - строка для преобразования
+
+// Возвращаемое значение:
+// Целое число
+
+int main() {
+    printf("atoi('123'): %d\n", atoi("123"));           // 123
+    printf("atoi('-456'): %d\n", atoi("-456"));         // -456
+    printf("atoi('789abc'): %d\n", atoi("789abc"));     // 789
+    printf("atoi('abc'): %d\n", atoi("abc"));           // 0
+
+    return 0;
+}
+```
+
+### Функция atof() - строка в вещественное число
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+double atof(const char *str);
+
+// Параметры:
+// str - строка для преобразования
+
+// Возвращаемое значение:
+// Вещественное число (double)
+
+int main() {
+    printf("atof('3.14'): %.2f\n", atof("3.14"));       // 3.14
+    printf("atof('-2.5'): %.2f\n", atof("-2.5"));       // -2.50
+    printf("atof('1.5e2'): %.2f\n", atof("1.5e2"));     // 150.00
+
+    return 0;
+}
+```
+
+### Функция atol() - строка в длинное целое число
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+long atol(const char *str);
+
+// Параметры:
+// str - строка для преобразования
+
+// Возвращаемое значение:
+// Длинное целое число (long)
+
+int main() {
+    printf("atol('1234567890'): %ld\n", atol("1234567890"));
+
+    return 0;
+}
+```
+
+### Функция strtol() - безопасное преобразование
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+long strtol(const char *str, char **endptr, int base);
+
+// Параметры:
+// str - строка для преобразования
+// endptr - указатель на первый непреобразованный символ
+// base - система счисления (2-36)
+
+// Возвращаемое значение:
+// Длинное целое число
+
+int main() {
+    const char *str = "123abc";
+    char *endptr;
+
+    // Преобразование с остановкой при первом нецифровом символе
+    long value = strtol(str, &endptr, 10);
+    printf("Value: %ld\n", value);           // 123
+    printf("Remaining: %s\n", endptr);       // abc
+
+    // Преобразование из шестнадцатеричной системы
+    long hex = strtol("FF", &endptr, 16);
+    printf("Hex FF = %ld\n", hex);           // 255
+
+    return 0;
+}
+```
+
+### Функция sprintf() - форматированное формирование строки
+```c
+#include <stdio.h>
+
+int sprintf(char *str, const char *format, ...);
+
+// Параметры:
+// str - целевая строка
+// format - строка формата
+// ... - аргументы
+
+// Возвращаемое значение:
+// Количество выведенных символов
+
+int main() {
+    char buffer[50];
+
+    sprintf(buffer, "Привет, %s!", "мир");
+    printf("%s\n", buffer);  // Привет, мир!
+
+    sprintf(buffer, "Число: %d, Вещество: %.2f", 42, 3.14159);
+    printf("%s\n", buffer);  // Число: 42, Вещество: 3.14
+
+    return 0;
+}
+```
+
+### Функция snprintf() - безопасное форматирование
+```c
+#include <stdio.h>
+
+int snprintf(char *str, size_t size, const char *format, ...);
+
+// Параметры:
+// str - целевая строка
+// size - максимальный размер
+// format - строка формата
+// ... - аргументы
+
+// ✅ БЕЗОПАСНЕЕ чем sprintf
+
+int main() {
+    char buffer[20];
+
+    // Максимум 19 символов + '\0'
+    snprintf(buffer, sizeof(buffer), "Hello, %s!", "World");
+    printf("%s\n", buffer);  // Hello, World!
+
+    // Если результат длиннее 19 символов, будет обрезано
+    snprintf(buffer, sizeof(buffer), "This is a very long string");
+    printf("%s\n", buffer);  // This is a very lo
+
+    return 0;
+}
+```
+
+## 5. ФУНКЦИИ ПРЕОБРАЗОВАНИЯ РЕГИСТРА
+
+### Функция toupper() - преобразование в верхний регистр
+```c
+#include <ctype.h>
+#include <stdio.h>
+
+int toupper(int c);
+
+// Параметры:
+// c - символ
+
+// Возвращаемое значение:
+// Символ в верхнем регистре
+
+int main() {
+    printf("toupper('a'): %c\n", toupper('a'));  // A
+    printf("toupper('Z'): %c\n", toupper('Z'));  // Z
+    printf("toupper('5'): %c\n", toupper('5'));  // 5 (не меняется)
+
+    return 0;
+}
+```
+
+### Функция tolower() - преобразование в нижний регистр
+```c
+#include <ctype.h>
+#include <stdio.h>
+
+int tolower(int c);
+
+// Параметры:
+// c - символ
+
+// Возвращаемое значение:
+// Символ в нижнем регистре
+
+int main() {
+    printf("tolower('A'): %c\n", tolower('A'));  // a
+    printf("tolower('z'): %c\n", tolower('z'));  // z
+
+    return 0;
+}
+```
+
+### Преобразование целой строки
+```c
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+void toUpperCase(char *str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = toupper(str[i]);
+    }
+}
+
+void toLowerCase(char *str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = tolower(str[i]);
+    }
+}
+
+int main() {
+    char str[] = "Hello World";
+
+    toUpperCase(str);
+    printf("Upper: %s\n", str);  // HELLO WORLD
+
+    toLowerCase(str);
+    printf("Lower: %s\n", str);  // hello world
+
+    return 0;
+}
+```
+
+## 6. ДРУГИЕ ПОЛЕЗНЫЕ ФУНКЦИИ
+
+### Функция strtok() - разделение строки на токены
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strtok(char *str, const char *delim);
+
+// Параметры:
+// str - строка для разделения (NULL при последующих вызовах)
+// delim - разделители
+
+// Возвращаемое значение:
+// Указатель на следующий токен
+// NULL если токенов больше нет
+
+int main() {
+    char str[] = "apple,banana,orange";
+    char delim[] = ",";
+
+    // Первый вызов
+    char *token = strtok(str, delim);
+    while (token != NULL) {
+        printf("Token: %s\n", token);
+        token = strtok(NULL, delim);  // Последующие вызовы с NULL
+    }
+
+    // Вывод:
+    // Token: apple
+    // Token: banana
+    // Token: orange
+
+    return 0;
+}
+
+// ⚠️ ВАЖНО: strtok() модифицирует исходную строку!
+```
+
+### Функция strdup() - дублирование строки
+```c
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+char *strdup(const char *str);
+
+// Параметры:
+// str - строка для дублирования
+
+// Возвращаемое значение:
+// Указатель на новую строку (выделена память!)
+
+int main() {
+    const char *original = "Hello, World!";
+
+    char *copy = strdup(original);
+    if (copy != NULL) {
+        printf("Original: %s\n", original);
+        printf("Copy: %s\n", copy);
+
+        // Изменяем копию
+        copy[0] = 'J';
+        printf("After change - Original: %s\n", original);  // Не меняется
+        printf("After change - Copy: %s\n", copy);
+
+        free(copy);  // ОБЯЗАТЕЛЬНО освобождаем!
+    }
+
+    return 0;
+}
+```
+
+### Функция strrev() - реверс строки
+```c
+#include <string.h>
+#include <stdio.h>
+
+char *strrev(char *str);
+
+// Параметры:
+// str - строка для реверса
+
+// Возвращаемое значение:
+// Указатель на str (изменённую)
+
+int main() {
+    char str[] = "Hello";
+
+    strrev(str);
+    printf("Reversed: %s\n", str);  // olleH
+
+    return 0;
+}
+
+// ⚠️ Функция strrev() не стандартная, может не быть везде!
+```
+
+## 7. ПРАКТИЧЕСКИЕ ПРИМЕРЫ
+
+### Пример 1: Подсчёт количества слов
+```c
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int countWords(const char *str) {
+    int count = 0;
+    int inWord = 0;
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (isspace(str[i])) {
+            inWord = 0;
+        } else if (!inWord) {
+            count++;
+            inWord = 1;
+        }
+    }
+
+    return count;
+}
+
+int main() {
+    const char *text = "Hello world from C programming";
+    printf("Words: %d\n", countWords(text));  // 5
+
+    return 0;
+}
+```
+
+### Пример 2: Проверка палиндрома
+```c
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int isPalindrome(const char *str) {
+    int left = 0;
+    int right = strlen(str) - 1;
+
+    while (left < right) {
+        char l = tolower(str[left]);
+        char r = tolower(str[right]);
+
+        if (l != r) return 0;
+
+        left++;
+        right--;
+    }
+
+    return 1;
+}
+
+int main() {
+    printf("'racecar' is palindrome: %d\n", isPalindrome("racecar"));    // 1
+    printf("'hello' is palindrome: %d\n", isPalindrome("hello"));        // 0
+
+    return 0;
+}
+```
+
+### Пример 3: Удаление пробелов из строки
+```c
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void removeSpaces(char *str) {
+    int j = 0;
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (!isspace(str[i])) {
+            str[j++] = str[i];
+        }
+    }
+    str[j] = '\0';
+}
+
+int main() {
+    char str[] = "Hello   World   !";
+
+    printf("Before: '%s'\n", str);
+    removeSpaces(str);
+    printf("After: '%s'\n", str);  // HelloWorld!
+
+    return 0;
+}
+```
+
+### Пример 4: Замена подстроки
+```c
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+char *replaceSubstring(const char *str, const char *old, const char *new) {
+    int oldLen = strlen(old);
+    int newLen = strlen(new);
+    int count = 0;
+
+    // Подсчитываем количество вхождений
+    const char *temp = str;
+    while ((temp = strstr(temp, old)) != NULL) {
+        count++;
+        temp += oldLen;
+    }
+
+    // Выделяем память для результата
+    int resultLen = strlen(str) + count * (newLen - oldLen);
+    char *result = (char *)malloc((resultLen + 1) * sizeof(char));
+
+    // Заменяем
+    int j = 0;
+    for (int i = 0; str[i] != '\0'; ) {
+        if (strncmp(&str[i], old, oldLen) == 0) {
+            for (int k = 0; k < newLen; k++) {
+                result[j++] = new[k];
+            }
+            i += oldLen;
+        } else {
+            result[j++] = str[i++];
+        }
+    }
+    result[j] = '\0';
+
+    return result;
+}
+
+int main() {
+    const char *str = "Hello World, Hello Universe";
+    char *result = replaceSubstring(str, "Hello", "Hi");
+
+    printf("Original: %s\n", str);
+    printf("Replaced: %s\n", result);  // Hi World, Hi Universe
+
+    free(result);
+    return 0;
+}
+```
+
+### Пример 5: Чтение строки со входа
+```c
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str[100];
+
+    // ❌ ОПАСНО: может переполнить буфер
+    // scanf("%s", str);  // Не проверяет размер!
+
+    // ✅ БЕЗОПАСНЕЕ: указываем максимальное количество символов
+    scanf("%99s", str);  // Максимум 99 символов
+
+    printf("You entered: %s\n", str);
+
+    // ✅ ЕЩЁ БЕЗОПАСНЕЕ: используем fgets
+    char str2[100];
+    fgets(str2, sizeof(str2), stdin);  // Читает до конца строки или переполнения
+
+    // Удаляем '\n' если присутствует
+    size_t len = strlen(str2);
+    if (len > 0 && str2[len - 1] == '\n') {
+        str2[len - 1] = '\0';
+    }
+
+    printf("You entered: %s\n", str2);
+
+    return 0;
+}
+```
+
+## 8. ТИПИЧНЫЕ ОШИБКИ СО СТРОКАМИ
+
+### Ошибка 1: Забыли нулевой символ
+```c
+// ❌ НЕПРАВИЛЬНО:
+char str[5] = {'H', 'e', 'l', 'l', 'o'};
+printf("%s\n", str);  // Не имеет '\0', undefined behavior!
+
+// ✅ ПРАВИЛЬНО:
+char str[6] = {'H', 'e', 'l', 'l', 'o', '\0'};
+printf("%s\n", str);  // Hello
+```
+
+### Ошибка 2: Переполнение буфера со strcpy
+```c
+// ❌ НЕПРАВИЛЬНО:
+char dest[10];
+strcpy(dest, "This is a very long string");  // Выходит за границы!
+
+// ✅ ПРАВИЛЬНО:
+char dest[50];  // Достаточно большой буфер
+strcpy(dest, "This is a very long string");
+
+// ✅ ЕЩЁ ЛУЧШЕ:
+char dest[50];
+strncpy(dest, "This is a very long string", sizeof(dest) - 1);
+dest[sizeof(dest) - 1] = '\0';
+```
+
+### Ошибка 3: Использование strcpy с перекрывающейся памятью
+```c
+// ❌ ОПАСНО: перекрывающаяся память
+char str[] = "Hello World";
+strcpy(str, str + 6);  // Undefined behavior!
+
+// ✅ ПРАВИЛЬНО: используйте memmove для перекрывающейся памяти
+memmove(str, str + 6, strlen(str + 6) + 1);
+```
+
+### Ошибка 4: Сравнение строк с ==
+```c
+// ❌ НЕПРАВИЛЬНО: сравнивает адреса, не содержимое
+char str1[] = "Hello";
+char str2[] = "Hello";
+if (str1 == str2) {  // Всегда false!
+    printf("Equal\n");
+}
+
+// ✅ ПРАВИЛЬНО: используйте strcmp
+if (strcmp(str1, str2) == 0) {
+    printf("Equal\n");
+}
+```
+
+### Ошибка 5: Использование строковых литералов как массивов
+```c
+// ❌ ОПАСНО: string literal read-only
+const char *str = "Hello";
+str[0] = 'J';  // Undefined behavior!
+
+// ✅ ПРАВИЛЬНО: используйте массив
+char str[] = "Hello";
+str[0] = 'J';  // Работает, str = "Jello"
+```
+
+### Ошибка 6: Забыли освободить память от strdup
+```c
+// ❌ НЕПРАВИЛЬНО: утечка памяти
+char *copy = strdup("Hello");
+// Забыли free(copy);
+
+// ✅ ПРАВИЛЬНО:
+char *copy = strdup("Hello");
+if (copy != NULL) {
+    // Используем copy...
+    free(copy);
+}
+```
+
+### Ошибка 7: Неправильное использование strtok
+```c
+// ❌ НЕПРАВИЛЬНО: strtok модифицирует строку
+const char *original = "a,b,c";
+char *token = strtok((char *)original, ",");  // Опасно!
+
+// ✅ ПРАВИЛЬНО: копируем строку сначала
+char str[] = "a,b,c";  // Локальная копия
+char *token = strtok(str, ",");
+```
+
+## 9. КЛАСС СИМВОЛА - ФУНКЦИИ ПРОВЕРКИ
+
+### Функции из ctype.h
+```c
+#include <ctype.h>
+#include <stdio.h>
+
+int main() {
+    char ch = 'A';
+
+    // isalpha - буква?
+    if (isalpha(ch)) printf("'%c' - буква\n", ch);
+
+    // isdigit - цифра?
+    if (isdigit('5')) printf("'5' - цифра\n");
+
+    // isalnum - буква или цифра?
+    if (isalnum('a')) printf("'a' - буква или цифра\n");
+
+    // isspace - пробельный символ?
+    if (isspace(' ')) printf("' ' - пробел\n");
+
+    // isupper - верхний регистр?
+    if (isupper('A')) printf("'A' - верхний регистр\n");
+
+    // islower - нижний регистр?
+    if (islower('a')) printf("'a' - нижний регистр\n");
+
+    // ispunct - пунктуация?
+    if (ispunct('!')) printf("'!' - пунктуация\n");
+
+    return 0;
+}
+```
+
+## 10. ОПТИМИЗАЦИЯ И BEST PRACTICES
+
+### Правильное обращение с памятью строк
+```c
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+// ✅ Хорошая практика: функция для безопасного копирования
+char *safeStringCopy(const char *source) {
+    if (source == NULL) return NULL;
+
+    size_t len = strlen(source);
+    char *dest = (char *)malloc((len + 1) * sizeof(char));
+    if (dest == NULL) return NULL;
+
+    strcpy(dest, source);
+    return dest;
+}
+
+// ✅ Хорошая практика: функция для безопасного объединения
+char *safeStringConcat(const char *str1, const char *str2) {
+    if (str1 == NULL || str2 == NULL) return NULL;
+
+    size_t len = strlen(str1) + strlen(str2);
+    char *result = (char *)malloc((len + 1) * sizeof(char));
+    if (result == NULL) return NULL;
+
+    strcpy(result, str1);
+    strcat(result, str2);
+    return result;
+}
+```
+
+### Избежание утечек памяти
+```c
+// ❌ НЕПРАВИЛЬНО:
+char *str = strdup("Hello");
+// Забыли free!
+
+// ✅ ПРАВИЛЬНО:
+char *str = strdup("Hello");
+if (str != NULL) {
+    // Используем str...
+    free(str);
+    str = NULL;
+}
+```
+
+## КЛЮЧЕВЫЕ МОМЕНТЫ
+
+✅ Строка в C заканчивается нулевым символом '\0'
+✅ ВСЕГДА проверяйте размер буфера при копировании строк
+✅ Используйте strncpy/strncat вместо strcpy/strcat
+✅ Используйте strcmp для сравнения строк, не ==
+✅ ВСЕГДА освобождайте память от strdup и malloc
+✅ Помните, что strlen не включает '\0'
+✅ Используйте fgets вместо scanf для безопасного ввода строк
+✅ strtok модифицирует исходную строку
+✅ Строковые литералы read-only, используйте массивы для изменяемых строк
+✅ Используйте sprintf/snprintf для форматирования строк
+✅ Проверяйте на NULL результаты malloc и strdup
+✅ Используйте функции ctype.h для проверки символов
+✅ Документируйте, кто отвечает за освобождение памяти
+✅ Всегда включайте <string.h> для функций работы со строками
+✅ Предпочитайте безопасные версии функций (strnXXX)

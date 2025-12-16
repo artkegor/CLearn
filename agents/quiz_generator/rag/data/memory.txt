@@ -1,0 +1,907 @@
+# ДИНАМИЧЕСКАЯ ПАМЯТЬ В ЯЗЫКЕ C - ПОЛНОЕ РУКОВОДСТВО
+
+## 1. ОСНОВЫ ДИНАМИЧЕСКОЙ ПАМЯТИ
+
+### Что такое динамическая память
+Динамическая память — это память, которая выделяется и освобождается во время выполнения программы. В отличие от локальных переменных, которые создаются на стеке (stack), динамическая память выделяется на куче (heap).
+
+### Стек vs Куча
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    // СТЕК (автоматический):
+    // - Выделяется автоматически при объявлении переменной
+    // - Освобождается автоматически при выходе из области видимости
+    // - Быстрее, но размер ограничен
+    // - Идеален для небольших, известных размеров
+    int x = 10;           // На стеке
+    int arr[100];         // На стеке (размер должен быть известен)
+
+    // КУЧА (динамический):
+    // - Выделяется вручную функциями malloc/calloc
+    // - Освобождается вручную функцией free
+    // - Медленнее, но может быть очень большой
+    // - Идеален для неизвестных размеров, которые узнаны во время выполнения
+    int *ptr = (int *)malloc(100 * sizeof(int));  // На куче
+
+    if (ptr != NULL) {
+        // Используем...
+        free(ptr);  // ОБЯЗАТЕЛЬНО освобождаем
+    }
+
+    return 0;
+}
+```
+
+### Проблемы с динамической памятью
+```c
+// 1. Memory Leak (утечка памяти)
+//    Забыли освободить память, которую выделили
+
+// 2. Use-After-Free (использование после освобождения)
+//    Используем память после free()
+
+// 3. Double Free (двойное освобождение)
+//    Вызываем free() дважды на одном указателе
+
+// 4. Buffer Overflow (переполнение буфера)
+//    Пишем за границы выделенной памяти
+
+// 5. Segmentation Fault (нарушение доступа)
+//    Обращаемся к невыделенной памяти
+```
+
+## 2. ФУНКЦИЯ MALLOC
+
+### Базовый синтаксис malloc
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+void *malloc(size_t size);
+
+// Параметры:
+// size - количество байтов для выделения
+
+// Возвращаемое значение:
+// Успех: указатель на выделенную память
+// Ошибка: NULL
+
+// Пример:
+int *ptr = (int *)malloc(sizeof(int));
+if (ptr == NULL) {
+    printf("Ошибка выделения памяти!\n");
+    return 1;
+}
+*ptr = 42;
+printf("Значение: %d\n", *ptr);
+free(ptr);
+```
+
+### Выделение памяти для разных типов
+```c
+#include <stdlib.h>
+
+// Целое число
+int *pInt = (int *)malloc(sizeof(int));
+
+// Вещественное число
+float *pFloat = (float *)malloc(sizeof(float));
+
+// Символ
+char *pChar = (char *)malloc(sizeof(char));
+
+// Массив целых чисел (10 элементов)
+int *pArr = (int *)malloc(10 * sizeof(int));
+
+// Массив символов (строка из 50 символов)
+char *pStr = (char *)malloc(50 * sizeof(char));
+
+// Структура
+struct Point {int x, y;};
+struct Point *pPoint = (struct Point *)malloc(sizeof(struct Point));
+
+// Освобождение
+free(pInt);
+free(pFloat);
+free(pChar);
+free(pArr);
+free(pStr);
+free(pPoint);
+```
+
+### Типизация malloc
+```c
+#include <stdlib.h>
+
+// malloc возвращает void*, поэтому нужно приводить тип
+
+// ✅ ПРАВИЛЬНО: с явным приведением типа
+int *ptr = (int *)malloc(10 * sizeof(int));
+
+// ⚠️ В C89 нужно явное приведение
+// В C99+ можно без приведения (но лучше с ним)
+
+// ✅ Безопаснее: используем размер переменной
+int *ptr = (int *)malloc(10 * sizeof(*ptr));  // Автоматически int
+
+struct Point {int x, y;};
+struct Point *p = (struct Point *)malloc(sizeof(*p));
+```
+
+### Инициализация выделенной памяти
+```c
+#include <stdlib.h>
+#include <string.h>
+
+// malloc выделяет память, но НЕ инициализирует её
+int *arr = (int *)malloc(5 * sizeof(int));
+// arr содержит мусор!
+
+// memset — инициализировать нулями
+memset(arr, 0, 5 * sizeof(int));  // Теперь arr[0..4] = 0
+
+free(arr);
+```
+
+## 3. ФУНКЦИЯ CALLOC
+
+### Базовый синтаксис calloc
+```c
+#include <stdlib.h>
+
+void *calloc(size_t nmemb, size_t size);
+
+// Параметры:
+// nmemb - количество элементов
+// size - размер одного элемента
+
+// Возвращаемое значение:
+// Успех: указатель на выделенную память (инициализирована нулями!)
+// Ошибка: NULL
+
+// Пример:
+int *arr = (int *)calloc(10, sizeof(int));
+// Эквивалентно:
+// int *arr = (int *)malloc(10 * sizeof(int));
+// memset(arr, 0, 10 * sizeof(int));
+```
+
+### Разница между malloc и calloc
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    // malloc: выделяет память, содержит мусор
+    int *arr1 = (int *)malloc(5 * sizeof(int));
+    printf("malloc: %d\n", arr1[0]);  // Случайное число!
+
+    // calloc: выделяет память, инициализирует нулями
+    int *arr2 = (int *)calloc(5, sizeof(int));
+    printf("calloc: %d\n", arr2[0]);  // 0
+
+    free(arr1);
+    free(arr2);
+    return 0;
+}
+```
+
+### Пример: массив структур с calloc
+```c
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+struct Student {
+    char name[50];
+    int age;
+    float gpa;
+};
+
+int main() {
+    int n = 3;
+    struct Student *students = (struct Student *)calloc(n, sizeof(struct Student));
+
+    if (students == NULL) {
+        printf("Ошибка выделения памяти!\n");
+        return 1;
+    }
+
+    // Все поля инициализированы нулями
+    for (int i = 0; i < n; i++) {
+        printf("Студент %d: name='%s', age=%d, gpa=%.1f\n", i,
+               students[i].name, students[i].age, students[i].gpa);
+    }
+
+    free(students);
+    return 0;
+}
+```
+
+## 4. ФУНКЦИЯ REALLOC
+
+### Базовый синтаксис realloc
+```c
+#include <stdlib.h>
+
+void *realloc(void *ptr, size_t size);
+
+// Параметры:
+// ptr - указатель на ранее выделенную память (или NULL)
+// size - новый размер в байтах
+
+// Возвращаемое значение:
+// Успех: указатель на изменённую память
+// Ошибка: NULL
+
+// Особенности:
+// - Если size = 0, эквивалентно free(ptr)
+// - Если ptr = NULL, эквивалентно malloc(size)
+// - Если возможно, расширяет существующий блок
+// - Если нельзя расширить, копирует в новый блок
+```
+
+### Изменение размера массива
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    // Выделяем массив из 5 элементов
+    int *arr = (int *)malloc(5 * sizeof(int));
+    if (arr == NULL) return 1;
+
+    for (int i = 0; i < 5; i++) {
+        arr[i] = i * 10;
+    }
+
+    // Расширяем до 10 элементов
+    int *temp = (int *)realloc(arr, 10 * sizeof(int));
+    if (temp == NULL) {
+        printf("Ошибка realloc!\n");
+        free(arr);  // Оригинальный блок остаётся
+        return 1;
+    }
+    arr = temp;  // Обновляем указатель!
+
+    // Инициализируем новые элементы
+    for (int i = 5; i < 10; i++) {
+        arr[i] = i * 10;
+    }
+
+    // Выводим все элементы
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    free(arr);
+    return 0;
+}
+```
+
+### Опасности realloc
+```c
+#include <stdlib.h>
+
+// ❌ НЕПРАВИЛЬНО: теряем указатель на старую память
+int *arr = (int *)malloc(100 * sizeof(int));
+arr = (int *)realloc(arr, 200 * sizeof(int));
+// Если realloc вернёт NULL, arr = NULL, старая память потеряна!
+
+// ✅ ПРАВИЛЬНО: используем временный указатель
+int *arr = (int *)malloc(100 * sizeof(int));
+int *temp = (int *)realloc(arr, 200 * sizeof(int));
+if (temp == NULL) {
+    printf("Ошибка!\n");
+    free(arr);  // Освобождаем старый блок
+    return 1;
+}
+arr = temp;  // Обновляем только если успех
+```
+
+## 5. ФУНКЦИЯ FREE
+
+### Освобождение памяти
+```c
+#include <stdlib.h>
+
+void free(void *ptr);
+
+// Параметры:
+// ptr - указатель на ранее выделенную память
+
+// Действие:
+// - Помечает память как свободную
+// - Память может быть переиспользована другими выделениями
+// - После free() указатель становится "dangling" (висячий)
+
+// Пример:
+int *ptr = (int *)malloc(100 * sizeof(int));
+// Используем ptr...
+free(ptr);
+// Теперь ptr содержит адрес, но память освобождена!
+```
+
+### Правила использования free
+```c
+#include <stdlib.h>
+
+// ✅ ПРАВИЛЬНО: освобождаем после использования
+int *ptr = (int *)malloc(100 * sizeof(int));
+free(ptr);
+
+// ✅ ПРАВИЛЬНО: проверяем на NULL перед free (хотя не обязательно)
+int *ptr = (int *)malloc(100 * sizeof(int));
+if (ptr != NULL) {
+    free(ptr);
+}
+
+// ✅ ПРАВИЛЬНО: free(NULL) безопасна (ничего не делает)
+int *ptr = NULL;
+free(ptr);  // Безопасно
+
+// ❌ НЕПРАВИЛЬНО: Double free (две попытки освободить)
+int *ptr = (int *)malloc(100 * sizeof(int));
+free(ptr);
+free(ptr);  // Undefined behavior!
+
+// ❌ НЕПРАВИЛЬНО: Use-After-Free
+int *ptr = (int *)malloc(100 * sizeof(int));
+free(ptr);
+ptr[0] = 10;  // Undefined behavior!
+
+// ✅ ХОРОШАЯ ПРАКТИКА: установить NULL после free
+int *ptr = (int *)malloc(100 * sizeof(int));
+free(ptr);
+ptr = NULL;  // Теперь ptr = NULL, безопаснее
+```
+
+## 6. ДИНАМИЧЕСКИЕ МАССИВЫ
+
+### Одномерный динамический массив
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    int n;
+    printf("Введите размер массива: ");
+    scanf("%d", &n);
+
+    // Выделяем память
+    int *arr = (int *)malloc(n * sizeof(int));
+    if (arr == NULL) {
+        printf("Ошибка выделения памяти!\n");
+        return 1;
+    }
+
+    // Заполняем массив
+    for (int i = 0; i < n; i++) {
+        arr[i] = i * 2;
+    }
+
+    // Используем массив
+    for (int i = 0; i < n; i++) {
+        printf("arr[%d] = %d\n", i, arr[i]);
+    }
+
+    // Освобождаем память
+    free(arr);
+    arr = NULL;
+
+    return 0;
+}
+```
+
+### Двумерный динамический массив (Способ 1)
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    int rows = 3, cols = 4;
+
+    // Выделяем массив указателей
+    int **matrix = (int **)malloc(rows * sizeof(int *));
+    if (matrix == NULL) return 1;
+
+    // Выделяем память для каждой строки
+    for (int i = 0; i < rows; i++) {
+        matrix[i] = (int *)malloc(cols * sizeof(int));
+        if (matrix[i] == NULL) return 1;
+    }
+
+    // Инициализируем матрицу
+    int value = 1;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            matrix[i][j] = value++;
+        }
+    }
+
+    // Выводим матрицу
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            printf("%3d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+
+    // Освобождаем память (в обратном порядке)
+    for (int i = 0; i < rows; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+
+    return 0;
+}
+```
+
+### Двумерный динамический массив (Способ 2)
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    int rows = 3, cols = 4;
+
+    // Выделяем один блок памяти
+    int *matrix = (int *)malloc(rows * cols * sizeof(int));
+    if (matrix == NULL) return 1;
+
+    // Инициализируем
+    for (int i = 0; i < rows * cols; i++) {
+        matrix[i] = i + 1;
+    }
+
+    // Доступ к элементам: matrix[i * cols + j]
+    printf("matrix[1][2] = %d\n", matrix[1 * cols + 2]);
+
+    // Освобождаем один раз
+    free(matrix);
+
+    return 0;
+}
+
+// Этот способ проще и быстрее!
+```
+
+### Динамический массив строк
+```c
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    int n = 3;
+
+    // Выделяем массив указателей на строки
+    char **strings = (char **)malloc(n * sizeof(char *));
+    if (strings == NULL) return 1;
+
+    // Выделяем память для каждой строки
+    strings[0] = (char *)malloc(20 * sizeof(char));
+    strings[1] = (char *)malloc(20 * sizeof(char));
+    strings[2] = (char *)malloc(20 * sizeof(char));
+
+    // Копируем строки
+    strcpy(strings[0], "Alice");
+    strcpy(strings[1], "Bob");
+    strcpy(strings[2], "Charlie");
+
+    // Выводим
+    for (int i = 0; i < n; i++) {
+        printf("%s\n", strings[i]);
+    }
+
+    // Освобождаем
+    for (int i = 0; i < n; i++) {
+        free(strings[i]);
+    }
+    free(strings);
+
+    return 0;
+}
+```
+
+## 7. ПРАКТИЧЕСКИЕ ПРИМЕРЫ
+
+### Пример 1: Подсчёт статистики по файлу
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    FILE *fp = fopen("data.txt", "r");
+    if (fp == NULL) return 1;
+
+    int capacity = 10;
+    int count = 0;
+    int *numbers = (int *)malloc(capacity * sizeof(int));
+    if (numbers == NULL) return 1;
+
+    int num;
+    while (fscanf(fp, "%d", &num) == 1) {
+        // Если массив заполнен, расширяем его
+        if (count == capacity) {
+            capacity *= 2;
+            int *temp = (int *)realloc(numbers, capacity * sizeof(int));
+            if (temp == NULL) {
+                free(numbers);
+                fclose(fp);
+                return 1;
+            }
+            numbers = temp;
+        }
+        numbers[count++] = num;
+    }
+
+    fclose(fp);
+
+    // Вычисляем среднее
+    int sum = 0;
+    for (int i = 0; i < count; i++) {
+        sum += numbers[i];
+    }
+    float average = (float)sum / count;
+    printf("Среднее значение: %.2f\n", average);
+
+    free(numbers);
+    return 0;
+}
+```
+
+### Пример 2: Динамический стек
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+struct Stack {
+    int *data;
+    int top;
+    int capacity;
+};
+
+struct Stack *createStack(int initialCapacity) {
+    struct Stack *stack = (struct Stack *)malloc(sizeof(struct Stack));
+    stack->data = (int *)malloc(initialCapacity * sizeof(int));
+    stack->top = -1;
+    stack->capacity = initialCapacity;
+    return stack;
+}
+
+void push(struct Stack *stack, int value) {
+    if (stack->top == stack->capacity - 1) {
+        stack->capacity *= 2;
+        int *temp = (int *)realloc(stack->data, stack->capacity * sizeof(int));
+        stack->data = temp;
+    }
+    stack->data[++stack->top] = value;
+}
+
+int pop(struct Stack *stack) {
+    if (stack->top == -1) return -1;
+    return stack->data[stack->top--];
+}
+
+void freeStack(struct Stack *stack) {
+    free(stack->data);
+    free(stack);
+}
+
+int main() {
+    struct Stack *stack = createStack(5);
+
+    push(stack, 10);
+    push(stack, 20);
+    push(stack, 30);
+
+    printf("Pop: %d\n", pop(stack));  // 30
+    printf("Pop: %d\n", pop(stack));  // 20
+
+    freeStack(stack);
+    return 0;
+}
+```
+
+### Пример 3: Копирование строки
+```c
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+char *copyString(const char *source) {
+    if (source == NULL) return NULL;
+
+    int length = strlen(source);
+    char *dest = (char *)malloc((length + 1) * sizeof(char));
+    if (dest == NULL) return NULL;
+
+    strcpy(dest, source);
+    return dest;
+}
+
+int main() {
+    const char *original = "Hello, World!";
+    char *copy = copyString(original);
+
+    if (copy != NULL) {
+        printf("Копия: %s\n", copy);
+        free(copy);
+    }
+
+    return 0;
+}
+```
+
+### Пример 4: Динамическая очередь
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+struct Queue {
+    int *data;
+    int front;
+    int rear;
+    int capacity;
+    int count;
+};
+
+struct Queue *createQueue(int capacity) {
+    struct Queue *q = (struct Queue *)malloc(sizeof(struct Queue));
+    q->data = (int *)malloc(capacity * sizeof(int));
+    q->front = 0;
+    q->rear = -1;
+    q->capacity = capacity;
+    q->count = 0;
+    return q;
+}
+
+void enqueue(struct Queue *q, int value) {
+    if (q->count == q->capacity) {
+        printf("Очередь переполнена!\n");
+        return;
+    }
+    q->rear = (q->rear + 1) % q->capacity;
+    q->data[q->rear] = value;
+    q->count++;
+}
+
+int dequeue(struct Queue *q) {
+    if (q->count == 0) return -1;
+    int value = q->data[q->front];
+    q->front = (q->front + 1) % q->capacity;
+    q->count--;
+    return value;
+}
+
+void freeQueue(struct Queue *q) {
+    free(q->data);
+    free(q);
+}
+
+int main() {
+    struct Queue *q = createQueue(5);
+
+    enqueue(q, 10);
+    enqueue(q, 20);
+    enqueue(q, 30);
+
+    printf("Dequeue: %d\n", dequeue(q));  // 10
+    printf("Dequeue: %d\n", dequeue(q));  // 20
+
+    freeQueue(q);
+    return 0;
+}
+```
+
+## 8. ТИПИЧНЫЕ ОШИБКИ
+
+### Ошибка 1: Забыли проверить на NULL
+```c
+// ❌ НЕПРАВИЛЬНО:
+int *ptr = (int *)malloc(100 * sizeof(int));
+ptr[0] = 10;  // Может быть NULL, произойдёт crash!
+
+// ✅ ПРАВИЛЬНО:
+int *ptr = (int *)malloc(100 * sizeof(int));
+if (ptr == NULL) {
+    printf("Ошибка выделения памяти!\n");
+    return 1;
+}
+ptr[0] = 10;
+free(ptr);
+```
+
+### Ошибка 2: Memory Leak (утечка памяти)
+```c
+// ❌ НЕПРАВИЛЬНО:
+int *ptr = (int *)malloc(100 * sizeof(int));
+ptr = NULL;  // Теряем адрес, память утечет!
+
+// ❌ НЕПРАВИЛЬНО:
+for (int i = 0; i < 1000; i++) {
+    int *temp = (int *)malloc(sizeof(int));
+    // Забыли освободить!
+}
+
+// ✅ ПРАВИЛЬНО:
+int *ptr = (int *)malloc(100 * sizeof(int));
+// Используем...
+free(ptr);
+ptr = NULL;
+```
+
+### Ошибка 3: Use-After-Free
+```c
+// ❌ НЕПРАВИЛЬНО:
+int *ptr = (int *)malloc(100 * sizeof(int));
+free(ptr);
+printf("%d\n", ptr[0]);  // Undefined behavior!
+
+// ✅ ПРАВИЛЬНО:
+int *ptr = (int *)malloc(100 * sizeof(int));
+printf("%d\n", ptr[0]);
+free(ptr);
+ptr = NULL;
+```
+
+### Ошибка 4: Double Free
+```c
+// ❌ НЕПРАВИЛЬНО:
+int *ptr = (int *)malloc(100 * sizeof(int));
+free(ptr);
+free(ptr);  // Undefined behavior!
+
+// ✅ ПРАВИЛЬНО:
+int *ptr = (int *)malloc(100 * sizeof(int));
+free(ptr);
+ptr = NULL;  // Теперь safe: free(NULL) ничего не делает
+```
+
+### Ошибка 5: Buffer Overflow
+```c
+// ❌ НЕПРАВИЛЬНО:
+int *arr = (int *)malloc(5 * sizeof(int));
+for (int i = 0; i <= 5; i++) {  // i <= 5 неправильно!
+    arr[i] = i;  // Выходит за границы!
+}
+
+// ✅ ПРАВИЛЬНО:
+int *arr = (int *)malloc(5 * sizeof(int));
+for (int i = 0; i < 5; i++) {   // i < 5 правильно
+    arr[i] = i;
+}
+free(arr);
+```
+
+### Ошибка 6: Неправильное приведение типа в realloc
+```c
+// ❌ НЕПРАВИЛЬНО:
+int *arr = (int *)malloc(100 * sizeof(int));
+arr = (int *)realloc(arr, 200 * sizeof(int));
+// Если realloc вернёт NULL, arr станет NULL, старая память потеряна!
+
+// ✅ ПРАВИЛЬНО:
+int *arr = (int *)malloc(100 * sizeof(int));
+int *temp = (int *)realloc(arr, 200 * sizeof(int));
+if (temp == NULL) {
+    printf("Ошибка!\n");
+    free(arr);
+    return 1;
+}
+arr = temp;
+```
+
+## 9. ИНСТРУМЕНТЫ ОТЛАДКИ
+
+### Проверка утечек памяти
+```bash
+# На Linux с использованием valgrind:
+gcc -g program.c -o program
+valgrind --leak-check=full ./program
+
+# На macOS:
+clang -g program.c -o program
+leaks -atExit -- ./program
+```
+
+### Отладочные макросы для malloc
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+#define DEBUG_MALLOC(size) \
+    ({ \
+        printf("malloc(%zu) at %s:%d\n", size, __FILE__, __LINE__); \
+        malloc(size); \
+    })
+
+#define DEBUG_FREE(ptr) \
+    ({ \
+        printf("free(%p) at %s:%d\n", ptr, __FILE__, __LINE__); \
+        free(ptr); \
+    })
+
+// Использование:
+int *ptr = (int *)DEBUG_MALLOC(100 * sizeof(int));
+// Выведет: malloc(400) at program.c:15
+
+DEBUG_FREE(ptr);
+// Выведет: free(0x...) at program.c:16
+```
+
+## 10. ОПТИМИЗАЦИЯ И BEST PRACTICES
+
+### Предварительное выделение памяти
+```c
+// ❌ МЕДЛЕННО: много выделений в цикле
+int *arr = NULL;
+for (int i = 0; i < 1000; i++) {
+    int *temp = (int *)realloc(arr, (i + 1) * sizeof(int));
+    arr = temp;
+    arr[i] = i;
+}
+
+// ✅ БЫСТРО: одно выделение
+int *arr = (int *)malloc(1000 * sizeof(int));
+for (int i = 0; i < 1000; i++) {
+    arr[i] = i;
+}
+free(arr);
+```
+
+### Использование структур для управления памятью
+```c
+#include <stdlib.h>
+
+struct DynamicArray {
+    int *data;
+    int size;      // Текущее количество элементов
+    int capacity;  // Выделенная память
+};
+
+struct DynamicArray *createArray(int initialCapacity) {
+    struct DynamicArray *arr = (struct DynamicArray *)malloc(sizeof(struct DynamicArray));
+    arr->data = (int *)malloc(initialCapacity * sizeof(int));
+    arr->size = 0;
+    arr->capacity = initialCapacity;
+    return arr;
+}
+
+void append(struct DynamicArray *arr, int value) {
+    if (arr->size == arr->capacity) {
+        arr->capacity *= 2;
+        int *temp = (int *)realloc(arr->data, arr->capacity * sizeof(int));
+        arr->data = temp;
+    }
+    arr->data[arr->size++] = value;
+}
+
+void freeArray(struct DynamicArray *arr) {
+    free(arr->data);
+    free(arr);
+}
+```
+
+## КЛЮЧЕВЫЕ МОМЕНТЫ
+
+✅ ВСЕГДА проверяйте результат malloc/calloc на NULL
+✅ ВСЕГДА освобождайте выделенную память с помощью free
+✅ Используйте calloc когда нужна инициализация нулями
+✅ Используйте realloc осторожно, сохраняя старый указатель
+✅ Установите NULL после free, чтобы избежать use-after-free
+✅ Проверяйте границы при работе с динамическими массивами
+✅ Следите за утечками памяти (используйте valgrind)
+✅ Избегайте double free
+✅ Не редактируйте выделенную память через неправильный указатель
+✅ Для двумерных массивов лучше один блок памяти, чем множество
+✅ Используйте структуры для управления сложной динамической памятью
+✅ Документируйте, кто отвечает за освобождение памяти
+✅ Предварительно выделяйте достаточно памяти, чтобы избежать частых realloc
+✅ Не забывайте #include <stdlib.h> для malloc/free
+✅ Используйте инструменты отладки для обнаружения утечек

@@ -1,0 +1,1125 @@
+# РАБОТА С ФАЙЛАМИ В ЯЗЫКЕ C - ПОЛНОЕ РУКОВОДСТВО
+
+## 1. ОСНОВЫ РАБОТЫ С ФАЙЛАМИ
+
+### Что такое файл
+Файл — это именованная последовательность данных на диске, которая существует независимо от программы. В C файлы представляются как потоки (streams) данных.
+
+### Типы файлов в C
+```c
+// Текстовые файлы - содержат читаемый текст
+// Записываются и читаются построчно
+// Каждая строка заканчивается символом новой строки '\n'
+
+// Бинарные файлы - содержат произвольные данные в двоичном формате
+// Прямой доступ к памяти структур и объектов
+// Читаются/записываются блоками
+```
+
+### Структура FILE
+```c
+#include <stdio.h>
+
+FILE *fp;  // Указатель на файл
+
+// FILE - это структура, которая содержит:
+// - Указатель на буфер в памяти
+// - Позицию в файле
+// - Флаги (ошибок, конца файла)
+// - Информацию о режиме открытия
+```
+
+## 2. ОТКРЫТИЕ И ЗАКРЫТИЕ ФАЙЛОВ
+
+### Функция fopen()
+```c
+#include <stdio.h>
+
+FILE *fopen(const char *filename, const char *mode);
+
+// Параметры:
+// filename - имя файла (с полным путём или относительным)
+// mode - режим открытия
+
+// Возвращаемое значение:
+// Успех: указатель на FILE
+// Ошибка: NULL
+```
+
+### Режимы открытия файлов
+```c
+"r"   // Чтение (Read)
+      // Файл должен существовать
+      // Указатель в начале файла
+      // Попытка записи вызывает ошибку
+
+"w"   // Запись (Write)
+      // Если файл существует - содержимое удаляется
+      // Если файла нет - создаётся новый
+      // Указатель в начале файла
+
+"a"   // Добавление (Append)
+      // Если файл существует - данные добавляются в конец
+      // Если файла нет - создаётся новый
+      // Указатель в конце файла
+
+"r+"  // Чтение и запись
+      // Файл должен существовать
+      // Можно читать и писать в любой позиции
+      // Не удаляет существующие данные
+
+"w+"  // Чтение и запись (создание)
+      // Если файл существует - содержимое удаляется
+      // Если файла нет - создаётся новый
+      // Можно читать и писать
+
+"a+"  // Чтение и добавление
+      // Если файл существует - данные добавляются в конец
+      // Если файла нет - создаётся новый
+      // Запись только в конец, чтение везде
+
+"rb"  // Бинарное чтение
+"wb"  // Бинарная запись
+"ab"  // Бинарное добавление
+"r+b" // Бинарное чтение и запись
+"w+b" // Бинарное чтение и запись (создание)
+"a+b" // Бинарное чтение и добавление
+```
+
+### Примеры открытия файлов
+```c
+#include <stdio.h>
+
+// Открытие файла для чтения
+FILE *fp = fopen("data.txt", "r");
+if (fp == NULL) {
+    printf("Ошибка: не удалось открыть файл!\n");
+    return 1;
+}
+
+// Работа с файлом...
+
+// Закрытие файла (ОБЯЗАТЕЛЬНО!)
+fclose(fp);
+
+// Открытие файла для записи
+FILE *fp = fopen("output.txt", "w");
+if (fp == NULL) {
+    perror("fopen");  // Выводит описание ошибки
+    return 1;
+}
+
+// Открытие файла для добавления
+FILE *fp = fopen("log.txt", "a");
+
+// Бинарное открытие
+FILE *fp = fopen("binary.bin", "rb");
+```
+
+### Функция fclose()
+```c
+#include <stdio.h>
+
+int fclose(FILE *stream);
+
+// Параметры:
+// stream - указатель на FILE, открытый с помощью fopen()
+
+// Возвращаемое значение:
+// Успех: 0
+// Ошибка: EOF (обычно -1)
+
+// ДЕЙСТВИЯ при закрытии:
+// 1. Очищает буфер (выводит всё, что осталось)
+// 2. Закрывает файловый дескриптор
+// 3. Освобождает структуру FILE
+```
+
+## 3. ЧТЕНИЕ ИЗ ФАЙЛОВ
+
+### Функция fgetc() - чтение одного символа
+```c
+#include <stdio.h>
+
+int fgetc(FILE *stream);
+
+// Параметры:
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Успех: код символа (0-255)
+// Конец файла: EOF (-1)
+
+// Пример:
+FILE *fp = fopen("test.txt", "r");
+int ch;
+while ((ch = fgetc(fp)) != EOF) {
+    printf("%c", (char)ch);
+}
+fclose(fp);
+```
+
+### Функция fgets() - чтение строки
+```c
+#include <stdio.h>
+
+char *fgets(char *str, int n, FILE *stream);
+
+// Параметры:
+// str - буфер для хранения строки
+// n - максимальное количество символов для чтения (включая '\0')
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Успех: указатель на str
+// Ошибка или EOF: NULL
+
+// Пример:
+FILE *fp = fopen("test.txt", "r");
+char line[100];
+while (fgets(line, sizeof(line), fp) != NULL) {
+    printf("%s", line);  // '\n' уже в строке!
+}
+fclose(fp);
+
+// Особенность: сохраняет '\n' в конец строки
+```
+
+### Функция fscanf() - форматированное чтение
+```c
+#include <stdio.h>
+
+int fscanf(FILE *stream, const char *format, ...);
+
+// Параметры:
+// stream - указатель на открытый файл
+// format - строка формата (как в scanf)
+// ... - переменные для сохранения данных
+
+// Возвращаемое значение:
+// Количество успешно прочитанных элементов
+// EOF если конец файла
+
+// Пример файла data.txt:
+// Alice 25 3.8
+// Bob 30 3.5
+// Charlie 22 3.9
+
+FILE *fp = fopen("data.txt", "r");
+char name[50];
+int age;
+float gpa;
+
+while (fscanf(fp, "%s %d %f", name, &age, &gpa) == 3) {
+    printf("%s: %d лет, GPA: %.1f\n", name, age, gpa);
+}
+fclose(fp);
+```
+
+### Функция fread() - чтение блоков (бинарные файлы)
+```c
+#include <stdio.h>
+
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+
+// Параметры:
+// ptr - указатель на буфер для данных
+// size - размер одного элемента в байтах
+// nmemb - количество элементов для чтения
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Количество успешно прочитанных элементов
+
+// Пример: чтение структур
+struct Student {
+    char name[50];
+    int age;
+    float gpa;
+};
+
+FILE *fp = fopen("students.bin", "rb");
+struct Student student;
+
+while (fread(&student, sizeof(struct Student), 1, fp) == 1) {
+    printf("%s: %d, GPA: %.2f\n", student.name, student.age, student.gpa);
+}
+fclose(fp);
+
+// Пример: чтение массива
+int arr[100];
+FILE *fp = fopen("numbers.bin", "rb");
+size_t count = fread(arr, sizeof(int), 100, fp);
+printf("Прочитано %zu элементов\n", count);
+fclose(fp);
+```
+
+## 4. ЗАПИСЬ В ФАЙЛЫ
+
+### Функция fputc() - запись одного символа
+```c
+#include <stdio.h>
+
+int fputc(int c, FILE *stream);
+
+// Параметры:
+// c - символ для записи
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Успех: код символа c
+// Ошибка: EOF
+
+// Пример:
+FILE *fp = fopen("output.txt", "w");
+char *text = "Hello, World!";
+for (int i = 0; text[i] != '\0'; i++) {
+    fputc(text[i], fp);
+}
+fclose(fp);
+```
+
+### Функция fputs() - запись строки
+```c
+#include <stdio.h>
+
+int fputs(const char *str, FILE *stream);
+
+// Параметры:
+// str - строка для записи
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Успех: неотрицательное число
+// Ошибка: EOF
+
+// Пример:
+FILE *fp = fopen("log.txt", "w");
+fputs("Первая строка\n", fp);
+fputs("Вторая строка\n", fp);
+fputs("Третья строка\n", fp);
+fclose(fp);
+
+// Особенность: НЕ добавляет '\n' в конец!
+```
+
+### Функция fprintf() - форматированная запись
+```c
+#include <stdio.h>
+
+int fprintf(FILE *stream, const char *format, ...);
+
+// Параметры:
+// stream - указатель на открытый файл
+// format - строка формата (как в printf)
+// ... - значения для форматирования
+
+// Возвращаемое значение:
+// Количество выведенных символов
+// Отрицательное число при ошибке
+
+// Пример:
+FILE *fp = fopen("data.txt", "w");
+fprintf(fp, "Студент: %s\n", "Alice");
+fprintf(fp, "Возраст: %d\n", 20);
+fprintf(fp, "GPA: %.2f\n", 3.8);
+fclose(fp);
+```
+
+### Функция fwrite() - запись блоков (бинарные файлы)
+```c
+#include <stdio.h>
+
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+
+// Параметры:
+// ptr - указатель на данные для записи
+// size - размер одного элемента в байтах
+// nmemb - количество элементов для записи
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Количество успешно записанных элементов
+
+// Пример: запись структур
+struct Student {
+    char name[50];
+    int age;
+    float gpa;
+};
+
+FILE *fp = fopen("students.bin", "wb");
+struct Student students[] = {
+    {"Alice", 20, 3.8},
+    {"Bob", 21, 3.5},
+    {"Charlie", 22, 3.9}
+};
+
+fwrite(students, sizeof(struct Student), 3, fp);
+fclose(fp);
+
+// Пример: запись массива
+int arr[] = {1, 2, 3, 4, 5};
+FILE *fp = fopen("numbers.bin", "wb");
+fwrite(arr, sizeof(int), 5, fp);
+fclose(fp);
+```
+
+## 5. НАВИГАЦИЯ ПО ФАЙЛАМ
+
+### Функция fseek() - перемещение указателя
+```c
+#include <stdio.h>
+
+int fseek(FILE *stream, long offset, int whence);
+
+// Параметры:
+// stream - указатель на открытый файл
+// offset - смещение в байтах (может быть отрицательным)
+// whence - начальная позиция:
+//   SEEK_SET (0) - начало файла
+//   SEEK_CUR (1) - текущая позиция
+//   SEEK_END (2) - конец файла
+
+// Возвращаемое значение:
+// Успех: 0
+// Ошибка: ненулевое значение
+
+// Примеры:
+FILE *fp = fopen("data.bin", "rb");
+
+// Перейти в начало файла
+fseek(fp, 0, SEEK_SET);
+
+// Перейти в конец файла
+fseek(fp, 0, SEEK_END);
+
+// Перейти на 100 байт назад от конца
+fseek(fp, -100, SEEK_END);
+
+// Перейти на 50 байт вперёд от текущей позиции
+fseek(fp, 50, SEEK_CUR);
+
+// Перейти на 5-й элемент структуры (каждая = 100 байт)
+fseek(fp, 5 * 100, SEEK_SET);
+
+fclose(fp);
+```
+
+### Функция ftell() - получение текущей позиции
+```c
+#include <stdio.h>
+
+long ftell(FILE *stream);
+
+// Параметры:
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Текущая позиция в байтах от начала файла
+// Ошибка: -1L
+
+// Пример: определение размера файла
+FILE *fp = fopen("data.bin", "rb");
+fseek(fp, 0, SEEK_END);
+long fileSize = ftell(fp);
+printf("Размер файла: %ld байт\n", fileSize);
+fclose(fp);
+
+// Пример: получение текущей позиции
+FILE *fp = fopen("test.txt", "r");
+char line[100];
+fgets(line, sizeof(line), fp);
+long pos = ftell(fp);
+printf("Позиция после первой строки: %ld\n", pos);
+fclose(fp);
+```
+
+### Функция rewind() - возврат в начало файла
+```c
+#include <stdio.h>
+
+void rewind(FILE *stream);
+
+// Параметры:
+// stream - указатель на открытый файл
+
+// Действие:
+// Перемещает указатель в начало файла
+// Очищает флаг EOF
+
+// Пример:
+FILE *fp = fopen("data.txt", "r");
+char buffer[100];
+
+// Первое чтение
+while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+    printf("%s", buffer);
+}
+
+// Вернуться в начало
+rewind(fp);
+
+// Второе чтение
+while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+    printf("%s", buffer);
+}
+
+fclose(fp);
+```
+
+## 6. ПРОВЕРКА СОСТОЯНИЯ ФАЙЛА
+
+### Функция feof() - проверка конца файла
+```c
+#include <stdio.h>
+
+int feof(FILE *stream);
+
+// Параметры:
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Ненулевое (true) - достигнут конец файла
+// 0 (false) - конец файла не достигнут
+
+// ⚠️ ВАЖНО: feof() возвращает true ПОСЛЕ попытки чтения за конец!
+
+// Правильный способ проверки конца файла:
+FILE *fp = fopen("data.txt", "r");
+char line[100];
+
+// ✅ Правильно:
+while (fgets(line, sizeof(line), fp) != NULL) {
+    printf("%s", line);
+}
+
+// ❌ Неправильно:
+// while (!feof(fp)) {
+//     fgets(line, sizeof(line), fp);
+//     printf("%s", line);  // Может обработать строку дважды!
+// }
+
+fclose(fp);
+```
+
+### Функция ferror() - проверка ошибки
+```c
+#include <stdio.h>
+
+int ferror(FILE *stream);
+
+// Параметры:
+// stream - указатель на открытый файл
+
+// Возвращаемое значение:
+// Ненулевое (true) - произошла ошибка
+// 0 (false) - ошибок нет
+
+// Пример:
+FILE *fp = fopen("data.txt", "r");
+if (fp == NULL) {
+    perror("fopen");
+    return 1;
+}
+
+char buffer[100];
+if (fgets(buffer, sizeof(buffer), fp) == NULL) {
+    if (ferror(fp)) {
+        printf("Ошибка чтения файла\n");
+        perror("fgets");
+    } else if (feof(fp)) {
+        printf("Конец файла\n");
+    }
+}
+
+fclose(fp);
+```
+
+### Функция clearerr() - очистка флагов ошибок
+```c
+#include <stdio.h>
+
+void clearerr(FILE *stream);
+
+// Параметры:
+// stream - указатель на открытый файл
+
+// Действие:
+// Очищает флаги ошибок и EOF
+// Позволяет повторно использовать файл после ошибки
+
+// Пример:
+FILE *fp = fopen("data.txt", "r");
+
+// Попытка чтения...
+char buffer[100];
+fgets(buffer, sizeof(buffer), fp);
+
+// Если произошла ошибка
+if (ferror(fp)) {
+    printf("Ошибка!\n");
+    clearerr(fp);  // Очищаем флаг
+    // Можем попробовать снова...
+}
+
+fclose(fp);
+```
+
+## 7. РАБОТА С БУФЕРИЗАЦИЕЙ
+
+### Функция fflush() - очистка буфера
+```c
+#include <stdio.h>
+
+int fflush(FILE *stream);
+
+// Параметры:
+// stream - указатель на открытый файл
+// NULL - очищает все буферы всех открытых файлов
+
+// Возвращаемое значение:
+// Успех: 0
+// Ошибка: EOF
+
+// Пример 1: очистка конкретного файла
+FILE *fp = fopen("log.txt", "w");
+fprintf(fp, "Событие 1\n");
+fflush(fp);  // Гарантирует, что данные записаны на диск
+fprintf(fp, "Событие 2\n");
+fflush(fp);
+fclose(fp);
+
+// Пример 2: очистка stdout (консоль)
+printf("Ожидание ввода...");
+fflush(stdout);  // Выводит сообщение немедленно
+scanf("%d", &x);
+
+// Пример 3: очистка всех буферов
+fflush(NULL);  // Очищает все открытые потоки
+```
+
+### Функция setvbuf() - установка режима буферизации
+```c
+#include <stdio.h>
+
+int setvbuf(FILE *stream, char *buf, int mode, size_t size);
+
+// Параметры:
+// stream - указатель на открытый файл
+// buf - указатель на буфер (обычно NULL)
+// mode - режим буферизации:
+//   _IOFBF - полная буферизация (по умолчанию для файлов)
+//   _IOLBF - построчная буферизация (по умолчанию для консоли)
+//   _IONBF - без буферизации
+
+// Пример: отключение буферизации
+FILE *fp = fopen("immediate.txt", "w");
+setvbuf(fp, NULL, _IONBF, 0);
+fprintf(fp, "Это выводится немедленно\n");
+fclose(fp);
+```
+
+## 8. ПРАКТИЧЕСКИЕ ПРИМЕРЫ
+
+### Пример 1: Копирование файла
+```c
+#include <stdio.h>
+
+void copyFile(const char *source, const char *destination) {
+    FILE *src = fopen(source, "rb");
+    if (src == NULL) {
+        perror("Ошибка открытия исходного файла");
+        return;
+    }
+
+    FILE *dest = fopen(destination, "wb");
+    if (dest == NULL) {
+        perror("Ошибка создания файла назначения");
+        fclose(src);
+        return;
+    }
+
+    int ch;
+    while ((ch = fgetc(src)) != EOF) {
+        fputc(ch, dest);
+    }
+
+    fclose(src);
+    fclose(dest);
+    printf("Файл скопирован успешно\n");
+}
+
+// Использование:
+copyFile("original.txt", "copy.txt");
+```
+
+### Пример 2: Подсчёт строк в файле
+```c
+#include <stdio.h>
+
+int countLines(const char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("fopen");
+        return -1;
+    }
+
+    int count = 0;
+    int ch;
+    while ((ch = fgetc(fp)) != EOF) {
+        if (ch == '\n') {
+            count++;
+        }
+    }
+
+    fclose(fp);
+    return count;
+}
+
+// Использование:
+int lines = countLines("data.txt");
+printf("Количество строк: %d\n", lines);
+```
+
+### Пример 3: Добавление текста к файлу
+```c
+#include <stdio.h>
+#include <time.h>
+
+void appendLog(const char *filename, const char *message) {
+    FILE *fp = fopen(filename, "a");
+    if (fp == NULL) {
+        perror("fopen");
+        return;
+    }
+
+    time_t now = time(NULL);
+    struct tm *timeinfo = localtime(&now);
+
+    fprintf(fp, "[%s] %s\n", asctime(timeinfo), message);
+
+    fclose(fp);
+}
+
+// Использование:
+appendLog("app.log", "Приложение запущено");
+appendLog("app.log", "Операция завершена");
+```
+
+### Пример 4: Чтение CSV файла
+```c
+#include <stdio.h>
+#include <string.h>
+
+void readCSV(const char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("fopen");
+        return;
+    }
+
+    char line[256];
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        // Удаляем '\n' в конце
+        line[strcspn(line, "\n")] = 0;
+
+        // Разделяем по запятым
+        char *token = strtok(line, ",");
+        while (token != NULL) {
+            printf("[%s] ", token);
+            token = strtok(NULL, ",");
+        }
+        printf("\n");
+    }
+
+    fclose(fp);
+}
+
+// Использование:
+readCSV("data.csv");
+```
+
+### Пример 5: Запись и чтение бинарного файла
+```c
+#include <stdio.h>
+
+struct Person {
+    char name[50];
+    int age;
+    float salary;
+};
+
+void writeBinary(const char *filename) {
+    FILE *fp = fopen(filename, "wb");
+
+    struct Person people[] = {
+        {"Alice", 30, 50000.0},
+        {"Bob", 25, 45000.0},
+        {"Charlie", 35, 60000.0}
+    };
+
+    fwrite(people, sizeof(struct Person), 3, fp);
+    fclose(fp);
+    printf("Данные записаны в %s\n", filename);
+}
+
+void readBinary(const char *filename) {
+    FILE *fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        perror("fopen");
+        return;
+    }
+
+    struct Person person;
+    while (fread(&person, sizeof(struct Person), 1, fp) == 1) {
+        printf("%s, %d лет, зарплата: %.2f\n",
+               person.name, person.age, person.salary);
+    }
+
+    fclose(fp);
+}
+
+// Использование:
+writeBinary("people.bin");
+readBinary("people.bin");
+```
+
+### Пример 6: Обратное чтение файла
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+void readFileReverse(const char *filename) {
+    FILE *fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        perror("fopen");
+        return;
+    }
+
+    // Определяем размер файла
+    fseek(fp, 0, SEEK_END);
+    long fileSize = ftell(fp);
+
+    // Читаем в обратном порядке
+    for (long i = fileSize - 1; i >= 0; i--) {
+        fseek(fp, i, SEEK_SET);
+        int ch = fgetc(fp);
+        printf("%c", (char)ch);
+    }
+
+    fclose(fp);
+}
+
+// Использование:
+readFileReverse("text.txt");
+```
+
+### Пример 7: Поиск слова в файле
+```c
+#include <stdio.h>
+#include <string.h>
+
+void findWord(const char *filename, const char *word) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("fopen");
+        return;
+    }
+
+    char line[256];
+    int lineNum = 0;
+
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        lineNum++;
+        if (strstr(line, word) != NULL) {
+            printf("Найдено на строке %d: %s", lineNum, line);
+        }
+    }
+
+    fclose(fp);
+}
+
+// Использование:
+findWord("text.txt", "importante");
+```
+
+## 9. РАБОТА С ПУТЯМИ И ФАЙЛАМИ
+
+### Проверка существования файла
+```c
+#include <stdio.h>
+
+int fileExists(const char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (fp != NULL) {
+        fclose(fp);
+        return 1;  // Файл существует
+    }
+    return 0;  // Файл не существует
+}
+
+// Использование:
+if (fileExists("data.txt")) {
+    printf("Файл найден\n");
+} else {
+    printf("Файл не найден\n");
+}
+```
+
+### Получение размера файла
+```c
+#include <stdio.h>
+
+long getFileSize(const char *filename) {
+    FILE *fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        return -1;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    fclose(fp);
+
+    return size;
+}
+
+// Использование:
+long size = getFileSize("data.bin");
+printf("Размер файла: %ld байт\n", size);
+```
+
+### Удаление файла
+```c
+#include <stdio.h>
+
+int deleteFile(const char *filename) {
+    if (remove(filename) == 0) {
+        printf("Файл удалён\n");
+        return 1;
+    } else {
+        perror("remove");
+        return 0;
+    }
+}
+
+// Использование:
+deleteFile("temp.txt");
+```
+
+### Переименование файла
+```c
+#include <stdio.h>
+
+int renameFile(const char *oldName, const char *newName) {
+    if (rename(oldName, newName) == 0) {
+        printf("Файл переименован\n");
+        return 1;
+    } else {
+        perror("rename");
+        return 0;
+    }
+}
+
+// Использование:
+renameFile("old_name.txt", "new_name.txt");
+```
+
+## 10. ТИПИЧНЫЕ ОШИБКИ
+
+### Ошибка 1: Незакрытые файлы
+```c
+// ❌ НЕПРАВИЛЬНО: файл не закрыт
+FILE *fp = fopen("data.txt", "r");
+char buffer[100];
+fgets(buffer, sizeof(buffer), fp);
+printf("%s\n", buffer);
+// fp не закрыт - утечка ресурса!
+
+// ✅ ПРАВИЛЬНО:
+FILE *fp = fopen("data.txt", "r");
+char buffer[100];
+fgets(buffer, sizeof(buffer), fp);
+printf("%s\n", buffer);
+fclose(fp);  // ВСЕГДА закрывайте файл!
+```
+
+### Ошибка 2: Отсутствие проверки fopen()
+```c
+// ❌ НЕПРАВИЛЬНО:
+FILE *fp = fopen("nonexistent.txt", "r");
+fgets(buffer, 100, fp);  // NULL dereference!
+
+// ✅ ПРАВИЛЬНО:
+FILE *fp = fopen("nonexistent.txt", "r");
+if (fp == NULL) {
+    perror("fopen");
+    return 1;
+}
+fgets(buffer, 100, fp);
+fclose(fp);
+```
+
+### Ошибка 3: Использование неправильного режима
+```c
+// ❌ НЕПРАВИЛЬНО:
+FILE *fp = fopen("data.txt", "r");
+fprintf(fp, "Это не будет записано\n");  // Режим "r" не позволяет запись!
+
+// ✅ ПРАВИЛЬНО:
+FILE *fp = fopen("data.txt", "w");
+fprintf(fp, "Это будет записано\n");
+fclose(fp);
+```
+
+### Ошибка 4: Путаница между текстовым и бинарным режимами
+```c
+// ❌ НЕПРАВИЛЬНО: структура как текст
+FILE *fp = fopen("data.txt", "w");
+struct Point {int x, y;};
+struct Point p = {10, 20};
+fprintf(fp, "%d %d\n", p.x, p.y);  // Теряется информация!
+fclose(fp);
+
+// ✅ ПРАВИЛЬНО: структура как бинарные данные
+FILE *fp = fopen("data.bin", "wb");
+struct Point p = {10, 20};
+fwrite(&p, sizeof(struct Point), 1, fp);
+fclose(fp);
+```
+
+### Ошибка 5: Неправильное использование feof()
+```c
+// ❌ НЕПРАВИЛЬНО:
+FILE *fp = fopen("data.txt", "r");
+while (!feof(fp)) {  // Может обработать последнюю строку дважды!
+    fgets(buffer, 100, fp);
+    printf("%s\n", buffer);
+}
+fclose(fp);
+
+// ✅ ПРАВИЛЬНО:
+FILE *fp = fopen("data.txt", "r");
+while (fgets(buffer, 100, fp) != NULL) {
+    printf("%s\n", buffer);
+}
+fclose(fp);
+```
+
+## 11. ПРОВЕРКА ОШИБОК И ОБРАБОТКА
+
+### Функция perror()
+```c
+#include <stdio.h>
+#include <string.h>
+
+// Выводит сообщение об ошибке в stderr
+
+FILE *fp = fopen("data.txt", "r");
+if (fp == NULL) {
+    perror("fopen failed");  // Выведет: "fopen failed: No such file"
+    return 1;
+}
+```
+
+### Функция strerror()
+```c
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+
+FILE *fp = fopen("data.txt", "r");
+if (fp == NULL) {
+    printf("Ошибка: %s\n", strerror(errno));
+    return 1;
+}
+```
+
+## 12. ОПТИМИЗАЦИЯ РАБОТЫ С ФАЙЛАМИ
+
+### Рекомендации по производительности
+```c
+// 1. Используйте буферизованное чтение (fgetc, fgets медленнее)
+// ✅ Быстро:
+char buffer[4096];
+fread(buffer, 1, 4096, fp);
+
+// ❌ Медленно:
+for (int i = 0; i < 4096; i++) {
+    buffer[i] = fgetc(fp);
+}
+
+// 2. Читайте большие блоки сразу
+size_t count = fread(data, sizeof(struct Data), 1000, fp);
+
+// 3. Минимизируйте количество fseek() операций
+// ❌ Медленно:
+for (int i = 0; i < 1000; i++) {
+    fseek(fp, i * 100, SEEK_SET);
+    fread(buffer, 100, 1, fp);
+}
+
+// ✅ Быстро:
+for (int i = 0; i < 1000; i++) {
+    fread(buffer, 100, 1, fp);
+}
+```
+
+## 13. СТАНДАРТНЫЕ ПОТОКИ
+
+### Стандартные потоки в C
+```c
+#include <stdio.h>
+
+// stdin  - стандартный ввод (консоль/pipe)
+// stdout - стандартный вывод (консоль)
+// stderr - стандартный вывод ошибок (консоль)
+
+// Все три уже открыты и готовы к использованию
+
+// Примеры:
+fprintf(stdout, "Обычное сообщение\n");
+fprintf(stderr, "Сообщение об ошибке\n");
+
+char buffer[100];
+fgets(buffer, sizeof(buffer), stdin);
+```
+
+## 14. РАБОТА С ВРЕМЕННЫМИ ФАЙЛАМИ
+
+### Функция tmpfile()
+```c
+#include <stdio.h>
+
+FILE *tmpfile(void);
+
+// Создаёт временный файл
+// Файл автоматически удаляется при закрытии
+
+FILE *tmp = tmpfile();
+if (tmp == NULL) {
+    perror("tmpfile");
+    return 1;
+}
+
+fprintf(tmp, "Временные данные\n");
+rewind(tmp);
+fgets(buffer, sizeof(buffer), tmp);
+
+fclose(tmp);  // Файл удаляется
+```
+
+## КЛЮЧЕВЫЕ МОМЕНТЫ
+
+✅ ВСЕГДА проверяйте результат fopen()
+✅ ВСЕГДА закрывайте файлы с помощью fclose()
+✅ Для текстовых файлов используйте режимы "r", "w", "a"
+✅ Для бинарных файлов используйте режимы "rb", "wb", "ab"
+✅ Используйте fprintf() для форматированного вывода в файл
+✅ Используйте fscanf() для форматированного ввода из файла
+✅ Используйте fread()/fwrite() для бинарных структур
+✅ Используйте fseek() и ftell() для навигации
+✅ Не используйте feof() как основное условие цикла
+✅ Обрабатывайте ошибки с помощью ferror() и perror()
+✅ Очищайте буфер с помощью fflush() когда нужно гарантировать запись
+✅ Используйте большие буферы для лучшей производительности

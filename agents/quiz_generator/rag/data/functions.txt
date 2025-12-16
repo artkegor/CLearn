@@ -1,0 +1,998 @@
+# ФУНКЦИИ В ЯЗЫКЕ C - ПОЛНОЕ РУКОВОДСТВО
+
+## 1. ОСНОВЫ ФУНКЦИЙ
+
+### Что такое функция
+Функция — это блок кода, который выполняет определённую задачу. Функции делают код модульным, переиспользуемым и легче читаемым. В C каждая программа состоит из одной или более функций.
+
+### Структура функции
+```c
+возвращаемый_тип имя_функции(параметры) {
+    // Тело функции
+    // Код, который выполняется при вызове функции
+    return значение;  // Возврат значения
+}
+```
+
+### Компоненты функции
+```c
+int add(int a, int b) {
+    //  ↑   ↑    ↑ ↑
+    //  |   |    | └─ Параметры (arguments)
+    //  |   |    └──── Список параметров (parameter list)
+    //  |   └───────── Имя функции (function name)
+    //  └───────────── Возвращаемый тип (return type)
+
+    int sum = a + b;
+    return sum;  // Возвращаемое значение
+}
+```
+
+## 2. ОБЪЯВЛЕНИЕ И ОПРЕДЕЛЕНИЕ ФУНКЦИЙ
+
+### Прототип функции (объявление)
+```c
+// Прототип функции (перед main или в отдельном файле)
+// Сообщает компилятору о существовании функции
+int add(int a, int b);
+
+// Определение функции (полная реализация)
+int add(int a, int b) {
+    return a + b;
+}
+
+// Использование функции
+int main() {
+    int result = add(5, 3);  // result = 8
+    printf("%d\n", result);
+    return 0;
+}
+```
+
+### Порядок объявления
+```c
+#include <stdio.h>
+
+// ✅ ПРАВИЛЬНЫЙ СПОСОБ 1: Прототип перед main
+int multiply(int x, int y);  // Прототип (объявление)
+
+int main() {
+    printf("%d\n", multiply(4, 5));
+    return 0;
+}
+
+// Определение после main
+int multiply(int x, int y) {
+    return x * y;
+}
+
+// ✅ ПРАВИЛЬНЫЙ СПОСОБ 2: Определение перед main
+int divide(int a, int b) {
+    if (b == 0) return 0;
+    return a / b;
+}
+
+int main() {
+    printf("%d\n", divide(10, 2));
+    return 0;
+}
+
+// ❌ НЕПРАВИЛЬНЫЙ СПОСОБ: Использование без объявления
+int main() {
+    printf("%d\n", subtract(10, 3));  // ⚠️ Ошибка компиляции!
+    return 0;
+}
+
+int subtract(int a, int b) {
+    return a - b;
+}
+```
+
+## 3. ВОЗВРАЩАЕМЫЕ ТИПЫ
+
+### Функции с возвращаемым значением
+```c
+#include <stdio.h>
+
+// Возвращает целое число
+int getAge() {
+    return 25;
+}
+
+// Возвращает вещественное число
+float getHeight() {
+    return 1.75;
+}
+
+// Возвращает символ
+char getGrade() {
+    return 'A';
+}
+
+// Возвращает указатель
+char *getName() {
+    return "Alice";
+}
+
+// Использование
+int main() {
+    printf("Возраст: %d\n", getAge());           // 25
+    printf("Рост: %.2f\n", getHeight());         // 1.75
+    printf("Оценка: %c\n", getGrade());          // A
+    printf("Имя: %s\n", getName());              // Alice
+    return 0;
+}
+```
+
+### Функции без возвращаемого значения (void)
+```c
+#include <stdio.h>
+
+// Функция ничего не возвращает
+void printMessage() {
+    printf("Hello, World!\n");
+}
+
+// Функция с параметрами, но без возврата
+void printSum(int a, int b) {
+    printf("Сумма: %d\n", a + b);
+}
+
+// Использование
+int main() {
+    printMessage();           // Выведет: "Hello, World!"
+    printSum(5, 3);          // Выведет: "Сумма: 8"
+    return 0;
+}
+```
+
+### Функции возвращающие void*
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+// Возвращает общий указатель (void*)
+void *allocateMemory(int size) {
+    return malloc(size);
+}
+
+// Использование
+int main() {
+    int *ptr = (int *)allocateMemory(10 * sizeof(int));
+    if (ptr != NULL) {
+        for (int i = 0; i < 10; i++) {
+            ptr[i] = i * 2;
+        }
+        printf("Первый элемент: %d\n", ptr[0]);
+        free(ptr);
+    }
+    return 0;
+}
+```
+
+## 4. ПАРАМЕТРЫ И АРГУМЕНТЫ
+
+### Параметры функции
+```c
+#include <stdio.h>
+
+// Функция с одним параметром
+void printSquare(int x) {
+    printf("Квадрат %d = %d\n", x, x * x);
+}
+
+// Функция с несколькими параметрами
+void printRectangle(int width, int height) {
+    printf("Площадь прямоугольника: %d\n", width * height);
+}
+
+// Функция без параметров
+int getConstant() {
+    return 42;
+}
+
+// Использование
+int main() {
+    printSquare(5);
+    printRectangle(4, 6);
+    int x = getConstant();
+    return 0;
+}
+```
+
+### Передача параметров по значению
+```c
+#include <stdio.h>
+
+// Параметры передаются ПО ЗНАЧЕНИЮ (копируются)
+void increment(int x) {
+    x++;  // Изменяем копию, не оригинал!
+    printf("Внутри функции: %d\n", x);
+}
+
+int main() {
+    int num = 5;
+    increment(num);      // Выведет: "Внутри функции: 6"
+    printf("В main: %d\n", num);  // Выведет: "В main: 5"
+    return 0;            // num не изменилась!
+}
+```
+
+### Передача параметров по ссылке (через указатели)
+```c
+#include <stdio.h>
+
+// Параметр передаётся как указатель
+void increment(int *x) {
+    (*x)++;  // Изменяем оригинальное значение!
+    printf("Внутри функции: %d\n", *x);
+}
+
+int main() {
+    int num = 5;
+    increment(&num);     // Передаём адрес
+    printf("В main: %d\n", num);  // Выведет: "В main: 6"
+    return 0;            // num изменилась!
+}
+```
+
+### Передача массивов
+```c
+#include <stdio.h>
+
+// Массив ВСЕГДА передаётся по ссылке (как указатель)
+void printArray(int arr[], int size) {
+    for (int i = 0; i < size; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+// Изменение элементов массива
+void doubleArray(int arr[], int size) {
+    for (int i = 0; i < size; i++) {
+        arr[i] *= 2;  // Изменяем оригинальный массив!
+    }
+}
+
+int main() {
+    int numbers[] = {1, 2, 3, 4, 5};
+    printArray(numbers, 5);     // Выведет: 1 2 3 4 5
+    doubleArray(numbers, 5);
+    printArray(numbers, 5);     // Выведет: 2 4 6 8 10
+    return 0;
+}
+```
+
+### Передача структур
+```c
+#include <stdio.h>
+
+struct Point {
+    int x;
+    int y;
+};
+
+// Структура передаётся по значению (копируется)
+void printPoint(struct Point p) {
+    printf("Координаты: (%d, %d)\n", p.x, p.y);
+}
+
+// Структура передаётся через указатель
+void movePoint(struct Point *p, int dx, int dy) {
+    p->x += dx;
+    p->y += dy;
+}
+
+int main() {
+    struct Point p = {5, 10};
+    printPoint(p);
+    movePoint(&p, 3, 4);
+    printf("Новые координаты: (%d, %d)\n", p.x, p.y);
+    return 0;
+}
+```
+
+## 5. ОБЛАСТЬ ВИДИМОСТИ (SCOPE)
+
+### Локальные переменные
+```c
+#include <stdio.h>
+
+void exampleFunction() {
+    int localVar = 10;  // Локальная переменная
+    // Видна только внутри exampleFunction
+    printf("%d\n", localVar);
+}
+
+int main() {
+    // printf("%d\n", localVar);  // ❌ Ошибка! localVar не видна здесь
+    exampleFunction();
+    return 0;
+}
+```
+
+### Глобальные переменные
+```c
+#include <stdio.h>
+
+int globalVar = 100;  // Глобальная переменная
+
+void printGlobal() {
+    printf("Глобальная переменная: %d\n", globalVar);
+}
+
+int main() {
+    printf("В main: %d\n", globalVar);
+    printGlobal();
+    globalVar = 200;
+    printGlobal();  // Выведет: "Глобальная переменная: 200"
+    return 0;
+}
+```
+
+### Статические переменные
+```c
+#include <stdio.h>
+
+void counter() {
+    static int count = 0;  // Инициализируется один раз
+    count++;
+    printf("Вызов %d\n", count);
+}
+
+int main() {
+    counter();  // Вызов 1
+    counter();  // Вызов 2
+    counter();  // Вызов 3
+    return 0;
+}
+```
+
+## 6. РЕКУРСИЯ
+
+### Что такое рекурсия
+Рекурсия — это когда функция вызывает саму себя. Каждая рекурсивная функция должна иметь:
+1. **Базовый случай** (base case) — условие выхода
+2. **Рекурсивный случай** (recursive case) — вызов самой себя
+
+### Факториал (рекурсия)
+```c
+#include <stdio.h>
+
+// Факториал: n! = n * (n-1) * (n-2) * ... * 1
+int factorial(int n) {
+    // Базовый случай
+    if (n <= 1) {
+        return 1;
+    }
+    // Рекурсивный случай
+    return n * factorial(n - 1);
+}
+
+int main() {
+    printf("5! = %d\n", factorial(5));  // 5! = 120
+    return 0;
+}
+
+// Вычисление:
+// factorial(5) = 5 * factorial(4)
+// factorial(4) = 4 * factorial(3)
+// factorial(3) = 3 * factorial(2)
+// factorial(2) = 2 * factorial(1)
+// factorial(1) = 1 (базовый случай)
+// Результат: 5 * 4 * 3 * 2 * 1 = 120
+```
+
+### Числа Фибоначчи (рекурсия)
+```c
+#include <stdio.h>
+
+// Последовательность Фибоначчи: 0, 1, 1, 2, 3, 5, 8, 13...
+int fib(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+int main() {
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", fib(i));
+    }
+    printf("\n");  // 0 1 1 2 3 5 8 13 21 34
+    return 0;
+}
+
+// ⚠️ ВАЖНО: Эта рекурсия неэффективна!
+// Лучше использовать итерацию или динамическое программирование
+```
+
+### Поиск в массиве (рекурсия)
+```c
+#include <stdio.h>
+
+// Линейный поиск с рекурсией
+int linearSearchRecursive(int arr[], int n, int target, int index) {
+    // Базовый случай: достигли конца массива
+    if (index == n) {
+        return -1;  // Не найдено
+    }
+
+    // Базовый случай: нашли элемент
+    if (arr[index] == target) {
+        return index;
+    }
+
+    // Рекурсивный случай
+    return linearSearchRecursive(arr, n, target, index + 1);
+}
+
+int main() {
+    int numbers[] = {1, 5, 3, 9, 2, 7};
+    int result = linearSearchRecursive(numbers, 6, 9, 0);
+    if (result != -1) {
+        printf("Найдено на позиции: %d\n", result);
+    } else {
+        printf("Не найдено\n");
+    }
+    return 0;
+}
+```
+
+### Башня Ханоя (рекурсия)
+```c
+#include <stdio.h>
+
+// Классическая задача рекурсии
+void hanoi(int n, char from, char to, char aux) {
+    // Базовый случай
+    if (n == 1) {
+        printf("Переместить диск с %c на %c\n", from, to);
+        return;
+    }
+
+    // Рекурсивные случаи
+    hanoi(n - 1, from, aux, to);           // Перместить n-1 дисков на aux
+    printf("Переместить диск с %c на %c\n", from, to);  // Переместить наибольший
+    hanoi(n - 1, aux, to, from);           // Переместить n-1 дисков на to
+}
+
+int main() {
+    hanoi(3, 'A', 'C', 'B');  // 3 диска с A на C через B
+    return 0;
+}
+```
+
+## 7. УКАЗАТЕЛИ НА ФУНКЦИИ
+
+### Объявление указателя на функцию
+```c
+#include <stdio.h>
+
+// Обычная функция
+int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    // Объявление указателя на функцию
+    int (*funcPtr)(int, int);  // Указатель на функцию с 2 параметрами int
+
+    // Назначение адреса функции
+    funcPtr = &add;  // или просто: funcPtr = add;
+
+    // Вызов функции через указатель
+    int result = (*funcPtr)(5, 3);  // или: funcPtr(5, 3);
+    printf("Результат: %d\n", result);  // 8
+
+    return 0;
+}
+```
+
+### Массив указателей на функции
+```c
+#include <stdio.h>
+
+int add(int a, int b) { return a + b; }
+int subtract(int a, int b) { return a - b; }
+int multiply(int a, int b) { return a * b; }
+int divide(int a, int b) { return (b != 0) ? a / b : 0; }
+
+int main() {
+    // Массив указателей на функции
+    int (*operations[])(int, int) = {add, subtract, multiply, divide};
+
+    int x = 10, y = 3;
+
+    printf("10 + 3 = %d\n", operations[0](x, y));   // add
+    printf("10 - 3 = %d\n", operations[1](x, y));   // subtract
+    printf("10 * 3 = %d\n", operations[2](x, y));   // multiply
+    printf("10 / 3 = %d\n", operations[3](x, y));   // divide
+
+    return 0;
+}
+```
+
+### Передача функции как параметра
+```c
+#include <stdio.h>
+
+// Функция принимает другую функцию как параметр
+void applyOperation(int a, int b, int (*operation)(int, int)) {
+    printf("Результат: %d\n", operation(a, b));
+}
+
+int add(int a, int b) { return a + b; }
+int multiply(int a, int b) { return a * b; }
+
+int main() {
+    applyOperation(5, 3, add);        // Результат: 8
+    applyOperation(5, 3, multiply);   // Результат: 15
+    return 0;
+}
+```
+
+## 8. ПЕРЕМЕННОЕ КОЛИЧЕСТВО ПАРАМЕТРОВ
+
+### Функции с переменным числом аргументов
+```c
+#include <stdio.h>
+#include <stdarg.h>
+
+// Функция, принимающая переменное число параметров
+int sum(int count, ...) {
+    va_list args;
+    va_start(args, count);  // Инициализируем список
+
+    int total = 0;
+    for (int i = 0; i < count; i++) {
+        total += va_arg(args, int);  // Получаем каждый аргумент
+    }
+
+    va_end(args);  // Завершаем список
+    return total;
+}
+
+int main() {
+    printf("sum(3, 5, 10, 15) = %d\n", sum(3, 5, 10, 15));      // 30
+    printf("sum(5, 1, 2, 3, 4, 5) = %d\n", sum(5, 1, 2, 3, 4, 5));  // 15
+    return 0;
+}
+```
+
+### Printf с переменным числом параметров
+```c
+#include <stdio.h>
+#include <stdarg.h>
+
+// Своя версия printf-подобной функции
+void printValues(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    while (*format) {
+        if (*format == 'd') {
+            printf("%d ", va_arg(args, int));
+        } else if (*format == 'f') {
+            printf("%.2f ", va_arg(args, double));
+        } else if (*format == 's') {
+            printf("%s ", va_arg(args, char*));
+        }
+        format++;
+    }
+
+    va_end(args);
+    printf("\n");
+}
+
+int main() {
+    printValues("ddf", 10, 20, 3.14);  // 10 20 3.14
+    printValues("sds", "Hello", 42, "World");  // Hello 42 World
+    return 0;
+}
+```
+
+## 9. ВСТРОЕННЫЕ ФУНКЦИИ (INLINE)
+
+### Встроенные функции
+```c
+#include <stdio.h>
+
+// Встроенная функция (компилятор может вставить её тело в место вызова)
+inline int square(int x) {
+    return x * x;
+}
+
+inline float divide(float a, float b) {
+    return (b != 0) ? a / b : 0;
+}
+
+int main() {
+    printf("Square of 5: %d\n", square(5));           // 25
+    printf("10 / 3 = %.2f\n", divide(10, 3));        // 3.33
+    return 0;
+}
+
+// Преимущества inline:
+// - Избегаем overhead вызова функции
+// - Код может быть быстрее для коротких функций
+
+// Недостатки:
+// - Увеличивается размер исполняемого файла
+// - Компилятор может проигнорировать inline
+```
+
+## 10. МАКРОСЫ ВСместо ФУНКЦИЙ
+
+### Макросы для быстрых операций
+```c
+#include <stdio.h>
+
+// Макрос (НЕ функция, простая подстановка текста)
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define SQUARE(x) ((x) * (x))
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+
+int main() {
+    printf("MAX(10, 20) = %d\n", MAX(10, 20));      // 20
+    printf("MIN(10, 20) = %d\n", MIN(10, 20));      // 10
+    printf("SQUARE(5) = %d\n", SQUARE(5));          // 25
+    printf("ABS(-7) = %d\n", ABS(-7));              // 7
+    return 0;
+}
+
+// ⚠️ ВАЖНО: Используйте скобки в макросах!
+#define BAD_SQUARE(x) x * x  // Опасно!
+// BAD_SQUARE(2 + 3) = 2 + 3 * 2 + 3 = 11 (неправильно!)
+
+#define GOOD_SQUARE(x) ((x) * (x))
+// GOOD_SQUARE(2 + 3) = ((2 + 3) * (2 + 3)) = 25 (правильно!)
+```
+
+## 11. ТИПИЧНЫЕ ОШИБКИ С ФУНКЦИЯМИ
+
+### Ошибка 1: Вызов функции перед объявлением
+```c
+// ❌ НЕПРАВИЛЬНО:
+int main() {
+    printf("%d\n", add(5, 3));  // ⚠️ Ошибка компиляции!
+    return 0;
+}
+
+int add(int a, int b) {
+    return a + b;
+}
+
+// ✅ ПРАВИЛЬНО:
+int add(int a, int b);  // Прототип
+
+int main() {
+    printf("%d\n", add(5, 3));
+    return 0;
+}
+
+int add(int a, int b) {
+    return a + b;
+}
+```
+
+### Ошибка 2: Неправильный тип возврата
+```c
+// ❌ НЕПРАВИЛЬНО:
+int getValue() {
+    return 3.14;  // Преобразование float в int
+}
+
+// ✅ ПРАВИЛЬНО:
+float getValue() {
+    return 3.14;
+}
+```
+
+### Ошибка 3: Отсутствие return в функции с возвращаемым типом
+```c
+// ❌ НЕПРАВИЛЬНО:
+int getValue() {
+    int x = 5;
+    // ⚠️ Нет return!
+}
+
+// ✅ ПРАВИЛЬНО:
+int getValue() {
+    int x = 5;
+    return x;
+}
+```
+
+### Ошибка 4: Изменение параметра не влияет на оригинал
+```c
+// ❌ НЕПРАВИЛЬНО: хотим изменить исходное значение
+void increment(int x) {
+    x++;  // Изменяем только копию!
+}
+
+int main() {
+    int num = 5;
+    increment(num);
+    printf("%d\n", num);  // 5 (не изменилась!)
+    return 0;
+}
+
+// ✅ ПРАВИЛЬНО: используем указатель
+void increment(int *x) {
+    (*x)++;
+}
+
+int main() {
+    int num = 5;
+    increment(&num);
+    printf("%d\n", num);  // 6 (изменилась!)
+    return 0;
+}
+```
+
+### Ошибка 5: Неправильная передача массива
+```c
+// ❌ НЕПРАВИЛЬНО: пытаемся вернуть локальный массив
+int *getArray() {
+    int arr[5] = {1, 2, 3, 4, 5};
+    return arr;  // ⚠️ arr выходит из области видимости!
+}
+
+// ✅ ПРАВИЛЬНО 1: динамическая память
+int *getArray() {
+    int *arr = (int *)malloc(5 * sizeof(int));
+    arr[0] = 1; arr[1] = 2; // и т.д.
+    return arr;
+}
+
+// ✅ ПРАВИЛЬНО 2: передача как параметр
+void fillArray(int *arr, int size) {
+    for (int i = 0; i < size; i++) {
+        arr[i] = i + 1;
+    }
+}
+```
+
+## 12. ПРАКТИЧЕСКИЕ ПРИМЕРЫ
+
+### Пример 1: Калькулятор
+```c
+#include <stdio.h>
+
+float add(float a, float b) { return a + b; }
+float subtract(float a, float b) { return a - b; }
+float multiply(float a, float b) { return a * b; }
+float divide(float a, float b) { return (b != 0) ? a / b : 0; }
+
+int main() {
+    printf("10 + 5 = %.2f\n", add(10, 5));
+    printf("10 - 5 = %.2f\n", subtract(10, 5));
+    printf("10 * 5 = %.2f\n", multiply(10, 5));
+    printf("10 / 5 = %.2f\n", divide(10, 5));
+    return 0;
+}
+```
+
+### Пример 2: Поиск минимума и максимума
+```c
+#include <stdio.h>
+
+void findMinMax(int arr[], int size, int *min, int *max) {
+    *min = arr[0];
+    *max = arr[0];
+
+    for (int i = 1; i < size; i++) {
+        if (arr[i] < *min) *min = arr[i];
+        if (arr[i] > *max) *max = arr[i];
+    }
+}
+
+int main() {
+    int numbers[] = {5, 2, 8, 1, 9, 3};
+    int min, max;
+
+    findMinMax(numbers, 6, &min, &max);
+    printf("Минимум: %d\n", min);  // 1
+    printf("Максимум: %d\n", max); // 9
+    return 0;
+}
+```
+
+### Пример 3: Сортировка с функцией сравнения
+```c
+#include <stdio.h>
+
+// Функция сравнения
+int compare(int a, int b) {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+}
+
+// Сортировка пузырьком
+void bubbleSort(int arr[], int n, int (*cmp)(int, int)) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (cmp(arr[j], arr[j + 1]) > 0) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int numbers[] = {5, 2, 8, 1, 9};
+    bubbleSort(numbers, 5, compare);
+
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", numbers[i]);
+    }
+    printf("\n");  // 1 2 5 8 9
+    return 0;
+}
+```
+
+### Пример 4: Сумма элементов и среднее значение
+```c
+#include <stdio.h>
+
+// Функция возвращает сумму и записывает среднее
+int sum(int arr[], int n, float *average) {
+    int total = 0;
+    for (int i = 0; i < n; i++) {
+        total += arr[i];
+    }
+    *average = (float)total / n;
+    return total;
+}
+
+int main() {
+    int numbers[] = {10, 20, 30, 40, 50};
+    float avg;
+
+    int total = sum(numbers, 5, &avg);
+    printf("Сумма: %d\n", total);       // 150
+    printf("Среднее: %.2f\n", avg);     // 30.00
+    return 0;
+}
+```
+
+### Пример 5: Повтор строки N раз
+```c
+#include <stdio.h>
+#include <string.h>
+
+void repeatString(const char *str, int times) {
+    for (int i = 0; i < times; i++) {
+        printf("%s", str);
+    }
+    printf("\n");
+}
+
+int main() {
+    repeatString("Ha", 3);     // HaHaHa
+    repeatString("ABC", 2);    // ABCABC
+    return 0;
+}
+```
+
+### Пример 6: Проверка простого числа
+```c
+#include <stdio.h>
+
+int isPrime(int n) {
+    if (n <= 1) return 0;
+    if (n <= 3) return 1;
+    if (n % 2 == 0 || n % 3 == 0) return 0;
+
+    for (int i = 5; i * i <= n; i += 6) {
+        if (n % i == 0 || n % (i + 2) == 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int main() {
+    for (int i = 1; i <= 20; i++) {
+        if (isPrime(i)) {
+            printf("%d ", i);
+        }
+    }
+    printf("\n");  // 2 3 5 7 11 13 17 19
+    return 0;
+}
+```
+
+## 13. ОПТИМИЗАЦИЯ ФУНКЦИЙ
+
+### Встроенные функции для производительности
+```c
+#include <stdio.h>
+
+// Для очень короткой функции можно использовать inline
+inline int square(int x) {
+    return x * x;
+}
+
+// Для частых вызовов рассмотрите макрос
+#define FAST_SQUARE(x) ((x) * (x))
+
+int main() {
+    // Оба подхода быстрые, но inline лучше для типобезопасности
+    printf("%d\n", square(5));
+    printf("%d\n", FAST_SQUARE(5));
+    return 0;
+}
+```
+
+### Минимизация копирования параметров
+```c
+// ❌ МЕДЛЕННО: копируются большие структуры
+void processPerson(struct Person person) {
+    printf("%s\n", person.name);
+}
+
+// ✅ БЫСТРО: передаём только указатель
+void processPerson(const struct Person *person) {
+    printf("%s\n", person->name);
+}
+```
+
+## 14. СТЕК И ХЕАП В ФУНКЦИЯХ
+
+### Локальные переменные на стеке
+```c
+#include <stdio.h>
+
+void function() {
+    int x = 10;      // На стеке
+    int y = 20;      // На стеке
+
+    printf("%d %d\n", x, y);
+    // x и y автоматически удаляются при выходе из функции
+}
+```
+
+### Динамическая память в функциях
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int *allocateArray(int size) {
+    int *arr = (int *)malloc(size * sizeof(int));
+    return arr;  // Память остаётся!
+}
+
+int main() {
+    int *numbers = allocateArray(10);
+    for (int i = 0; i < 10; i++) {
+        numbers[i] = i * 2;
+    }
+    printf("%d\n", numbers[5]);  // 10
+    free(numbers);  // ОБЯЗАТЕЛЬНО освободить память!
+    return 0;
+}
+```
+
+## КЛЮЧЕВЫЕ МОМЕНТЫ
+
+✅ ВСЕГДА объявляйте функции перед использованием (прототип или определение)
+✅ Используйте void для функций без параметров и возврата
+✅ Параметры передаются по значению, если не используются указатели
+✅ Массивы ВСЕГДА передаются по ссылке (как указатели)
+✅ Используйте указатели для изменения исходного значения
+✅ Рекурсия должна иметь базовый случай для выхода
+✅ Указатели на функции позволяют передавать функции как параметры
+✅ inline для коротких, часто вызываемых функций
+✅ ВСЕГДА закрывайте динамическую память (free)
+✅ Используйте const для параметров, которые не должны изменяться
+✅ Документируйте функции: параметры, возврат, побочные эффекты
+✅ Избегайте глобальных переменных когда возможно
+✅ Функции должны делать одно и делать это хорошо (SOLID принцип)
+✅ Используйте осмысленные имена функций
